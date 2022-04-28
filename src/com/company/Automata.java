@@ -1,4 +1,5 @@
 package com.company;
+import java.awt.*;
 import java.io.FileReader;
 import java.io.BufferedReader;
 import java.util.Arrays;
@@ -103,19 +104,23 @@ public class Automata {
     }
 
     public Automata Complete(){
-        char[] alphabet = "abcdefghijklmnopqrstuvwxyz".toCharArray();
+        /*
+        We create a new automaton and we make it complete
+        */
+
+        char[] alphabet = "abcdefghijklmnopqrstuvwxyz".toCharArray(); // alphabet of all possible inputs as an array of char
         int i, j;
 
-        String[][] check_states = new String[NB_WORD][NB_TRANSITIONS+1]; // +1 word
-        StringBuilder sb = new StringBuilder();
+        String[][] check_states = new String[NB_WORD][NB_TRANSITIONS+1]; // (+1 word) this array will allow us to check for each input if each state use it at least once
+        StringBuilder sb = new StringBuilder(); // optimized way to build a string because string are easier to cut
 
         for(i=0; i<NB_WORD;i++) {
             sb.setLength(0);
-            sb.append(String.valueOf(alphabet[i]));
-            sb.append(" ");
+            sb.append(String.valueOf(alphabet[i])); // add the input as the first element of each array inside the check_states array
+            sb.append(" ");// for split
             for (j = 0; j < NB_TRANSITIONS; j++) {
                 if (TRANSITIONS[j].getWord() == alphabet[i]){
-                    sb.append(String.valueOf(TRANSITIONS[j].getInit().getName()));
+                    sb.append(String.valueOf(TRANSITIONS[j].getInit().getName())); // add states using the input alphabet[i]
                     sb.append(" ");
 
                 }
@@ -123,37 +128,42 @@ public class Automata {
             System.out.println(sb.toString());
             check_states[i] = sb.toString().split(" ");
         }
-        return addStates(check_states);
+        return CompleteAddTrashAndTransitions(check_states);
     }
 
-    private Automata addStates(String[][] check_states){
+    private Automata CompleteAddTrashAndTransitions(String[][] check_states){
+        /*
+        Add the Trash state and the necessary transitions
+         */
         char[] alphabet = "abcdefghijklmnopqrstuvwxyz".toCharArray();
         int i,j,step;
-        boolean trash = false;
-
+        boolean trash = false; // trash state not created yet
         for(i = 0; i<NB_WORD; i++){
-            step = 0;
-            State[] new_states = new State[NB_STATES+1];
-            Transition[] new_transitions = new Transition[NB_TRANSITIONS+1];
+            step = 0; // step represent the current state we are looking for according to the word
+            State[] new_states = new State[NB_STATES+1]; // current state plus the space for the trash
+            Transition[] new_transitions = new Transition[NB_TRANSITIONS]; // current transitions, size doesn't matter
+
             for(j = 1; j<check_states[i].length; j++) {
-                if (step == Integer.parseInt(check_states[i][j]))
+                if (step == Integer.parseInt(check_states[i][j])) //if the state already use the word we go on
                     step += 1;
 
-                else {
-                    if (!trash) {
+                else {// if not we add the transition
+                    if (!trash) { // if trash isn't already created we make it and its transitions
                         for (int s = 0; s < NB_STATES; s++)
                             new_states[s] = STATES[s];
 
                         new_states[NB_STATES] = new State("Trash", false, false);
 
-                        for (int k = 0; k < NB_WORD; k++)
-                            if(k==0)
+                        for (int k = 0; k < NB_WORD; k++) // transitions of trash state
+                            if(k==0) // first one based on the current transitions
                                 new_transitions = addTransition(TRANSITIONS, new_states[NB_STATES], alphabet[k], new_states[NB_STATES]);
                             else
                                 new_transitions = addTransition(new_transitions, new_states[NB_STATES], alphabet[k], new_states[NB_STATES]);
+
                         trash = true;
                     }
-                    new_transitions = addTransition(new_transitions, new_states[step], alphabet[i], new_states[NB_STATES]);
+                    new_transitions = addTransition(new_transitions, new_states[step], alphabet[i], new_states[NB_STATES]); // we add the missing transitions
+                    step += 1;
                 }
             }
             return new Automata(new_states, new_states.length, new_transitions, new_transitions.length, NB_WORD);
@@ -166,6 +176,7 @@ public class Automata {
         Transition[] new_tr = new Transition[old_tr.length+1];
         for(int i = 0; i<old_tr.length; i++)
             new_tr[i] = old_tr[i];
+
         new_tr[old_tr.length] = new Transition(init,word,end);
         return new_tr;
     }
