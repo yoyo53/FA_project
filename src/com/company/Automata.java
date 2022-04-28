@@ -29,6 +29,13 @@ public class Automata {
         setTransitions(file);
     }
 
+    public Automata(State[] states, int nb_states, Transition[] transitions, int nb_transitions, int nb_word){
+        STATES = states;
+        NB_STATES = nb_states;
+        TRANSITIONS = transitions;
+        NB_TRANSITIONS = nb_transitions;
+        NB_WORD = nb_word;
+    }
 
     /*
     private String[] getFile() throws Exception {
@@ -93,6 +100,69 @@ public class Automata {
 
     public Transition[] getTRANSITIONS() {
         return TRANSITIONS;
+    }
+
+    public Automata Complete(){
+        char[] alphabet = "abcdefghijklmnopqrstuvwxyz".toCharArray();
+        int i, j;
+
+        String[][] check_states = new String[NB_WORD][NB_TRANSITIONS+1]; // +1 word
+        StringBuilder sb = new StringBuilder();
+
+        for(i=0; i<NB_WORD;i++) {
+            sb.setLength(0);
+            sb.append(String.valueOf(alphabet[i]));
+            sb.append(" ");
+            for (j = 0; j < NB_TRANSITIONS; j++) {
+                if (TRANSITIONS[j].getWord() == alphabet[i]){
+                    sb.append(String.valueOf(TRANSITIONS[j].getInit().getName()));
+                    sb.append(" ");
+
+                }
+            }
+            System.out.println(sb.toString());
+            check_states[i] = sb.toString().split(" ");
+        }
+        return addStates(check_states);
+    }
+
+    private Automata addStates(String[][] check_states){
+        char[] alphabet = "abcdefghijklmnopqrstuvwxyz".toCharArray();
+        int i,j,step;
+        boolean trash = false;
+
+        for(i = 0; i<NB_WORD; i++){
+            step = 0;
+            State[] new_states = new State[NB_STATES+1];
+            Transition[] new_transitions = new Transition[NB_TRANSITIONS+1];
+            for(j = 1; j<check_states[i].length; j++) {
+                if (step == Integer.parseInt(check_states[i][j]))
+                    step += 1;
+
+                else {
+                    if (!trash) {
+                        for (int s = 0; s < NB_STATES; s++)
+                            new_states[s] = STATES[s];
+                        new_states[NB_STATES ] = new State("Trash", false, false);
+                        for (int k = 0; k < NB_WORD; k++)
+                            new_transitions = addTransition(TRANSITIONS, new_states[NB_STATES], alphabet[i], new_states[NB_STATES ]);
+                        trash = true;
+                    }
+                    new_transitions = addTransition(new_transitions, new_states[step], alphabet[i], new_states[NB_STATES]);
+                }
+            }
+            return new Automata(new_states, new_states.length, new_transitions, new_transitions.length, NB_WORD);
+
+        }
+        return this;
+    }
+
+    private Transition[] addTransition(Transition[] old_tr, State init, char word, State end){
+        Transition[] new_tr = new Transition[old_tr.length+1];
+        for(int i = 0; i<old_tr.length; i++)
+            new_tr[i] = old_tr[i];
+        new_tr[old_tr.length] = new Transition(init,word,end);
+        return new_tr;
     }
 
     @Override
