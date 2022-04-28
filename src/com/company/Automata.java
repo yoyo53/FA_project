@@ -143,9 +143,14 @@ public class Automata {
                     if (!trash) {
                         for (int s = 0; s < NB_STATES; s++)
                             new_states[s] = STATES[s];
-                        new_states[NB_STATES ] = new State("Trash", false, false);
+
+                        new_states[NB_STATES] = new State("Trash", false, false);
+
                         for (int k = 0; k < NB_WORD; k++)
-                            new_transitions = addTransition(TRANSITIONS, new_states[NB_STATES], alphabet[k], new_states[NB_STATES ]);
+                            if(k==0)
+                                new_transitions = addTransition(TRANSITIONS, new_states[NB_STATES], alphabet[k], new_states[NB_STATES]);
+                            else
+                                new_transitions = addTransition(new_transitions, new_states[NB_STATES], alphabet[k], new_states[NB_STATES]);
                         trash = true;
                     }
                     new_transitions = addTransition(new_transitions, new_states[step], alphabet[i], new_states[NB_STATES]);
