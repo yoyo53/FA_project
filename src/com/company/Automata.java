@@ -145,7 +145,7 @@ public class Automata {
                             new_states[s] = STATES[s];
                         new_states[NB_STATES ] = new State("Trash", false, false);
                         for (int k = 0; k < NB_WORD; k++)
-                            new_transitions = addTransition(TRANSITIONS, new_states[NB_STATES], alphabet[i], new_states[NB_STATES ]);
+                            new_transitions = addTransition(TRANSITIONS, new_states[NB_STATES], alphabet[k], new_states[NB_STATES ]);
                         trash = true;
                     }
                     new_transitions = addTransition(new_transitions, new_states[step], alphabet[i], new_states[NB_STATES]);
