@@ -12,13 +12,14 @@ public class Automata {
 
     private final Transition[] TRANSITIONS;                   // List of transitions of the automaton
     private final int NB_TRANSITIONS;               // Maximum number of transitions of the automaton
-
+    private final int NB_WORD;
 
     public Automata(String address_file) throws Exception{
         String[] file = getFile(address_file); // the file is a list of string where each element of the list is a line
 
         NB_STATES = Integer.parseInt(file[1]);  // The second (index 1) line of the file contains the number of states, so we take it to initialize MAX_NB_STATES
         NB_TRANSITIONS = Integer.parseInt(file[4]); // The fifth line (index 4) of the file contains the number of transitions, so we take it to initialize MAX_NB_TRANSITIONS
+        NB_WORD = Integer.parseInt(file[0]); //the first line gives the number of possible word
 
         STATES = new State[NB_STATES];
         TRANSITIONS = new Transition[NB_TRANSITIONS];
