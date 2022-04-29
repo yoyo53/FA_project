@@ -56,12 +56,12 @@ public class Automaton {
             is_final = false;
             name = String.valueOf(i);
 
-            for(int j = 1; j < Integer.parseInt(initials[0]) + 1; j++)
-                if(name.equals(initials[j]))
+            for (int j = 1; j < Integer.parseInt(initials[0]) + 1; j++)
+                if (name.equals(initials[j]))
                     is_initial = true;
 
-            for(int j = 1; j < Integer.parseInt(finals[0]) + 1; j++)
-                if(name.equals(finals[j]))
+            for (int j = 1; j < Integer.parseInt(finals[0]) + 1; j++)
+                if (name.equals(finals[j]))
                     is_final = true;
 
             STATES[i] = new State(name, is_initial, is_final);
@@ -69,7 +69,7 @@ public class Automaton {
     }
 
     private State getStateFromName(String str) {
-        for(State state: STATES)
+        for (State state: STATES)
             if (str.equals(state.getNAME()))
                 return state;
         return null;
@@ -78,7 +78,7 @@ public class Automaton {
     private void setTransitions(String[] file){
         State start, end;
         char word;
-        for(int i = 0; i < NB_TRANSITIONS; i++){
+        for (int i = 0; i < NB_TRANSITIONS; i++){
             String[] tr = file[i + 5].split("[a-z*]");
             start = getStateFromName(tr[0]);
             word = file[i+5].charAt(tr[0].length());
@@ -100,20 +100,17 @@ public class Automaton {
         int i, j;
         boolean[][] step_word = new boolean[NB_STATES][NB_WORD];
 
-        for(i = 0; i < NB_STATES; i++)
+        for (i = 0; i < NB_STATES; i++)
             for (j = 0; j < NB_WORD; j++)
                 step_word[i][j] = false;
 
-        for(i = 0; i < NB_STATES; i++){
-            for(j = 0; j < NB_TRANSITIONS; j++){
-                if(TRANSITIONS[j].getSTART() == STATES[i] && !String.valueOf(TRANSITIONS[j].getWORD()).equals("*")){
+        for (i = 0; i < NB_STATES; i++)
+            for (j = 0; j < NB_TRANSITIONS; j++)
+                if (TRANSITIONS[j].getSTART() == STATES[i] && !String.valueOf(TRANSITIONS[j].getWORD()).equals("*"))
                     step_word[i][TRANSITIONS[j].getWORD() - 97] = true; // 97 is the int value of the ascii code for "a"
-                }
-            }
-        }
 
         StringBuilder sb = new StringBuilder();
-        for(i = 0; i < NB_STATES; i++){
+        for (i = 0; i < NB_STATES; i++){
             for (j = 0; j < NB_WORD; j++) {
                 sb.append(step_word[i][j]);
                 sb.append(" ");
