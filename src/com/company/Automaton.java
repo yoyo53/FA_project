@@ -1,14 +1,11 @@
 package com.company;
-import java.awt.*;
 import java.io.FileReader;
 import java.io.BufferedReader;
 import java.util.Arrays;
-import java.io.File;
-import java.util.Scanner;
 
 
 // Object that will represent an automaton
-public class Automata {
+public class Automaton {
     private final State[] STATES;                             // List of states of the automaton
     private final int NB_STATES;                    // Maximum number of states of the automaton
 
@@ -16,7 +13,7 @@ public class Automata {
     private final int NB_TRANSITIONS;               // Maximum number of transitions of the automaton
     private final int NB_WORD;
 
-    public Automata(String address_file) throws Exception{
+    public Automaton(String address_file) throws Exception{
         String[] file = getFile(address_file); // the file is a list of string where each element of the list is a line
 
         NB_STATES = Integer.parseInt(file[1]);  // The second (index 1) line of the file contains the number of states, so we take it to initialize MAX_NB_STATES
@@ -30,7 +27,7 @@ public class Automata {
         setTransitions(file);
     }
 
-    public Automata(State[] states, int nb_states, Transition[] transitions, int nb_transitions, int nb_word){
+    public Automaton(State[] states, int nb_states, Transition[] transitions, int nb_transitions, int nb_word){
         STATES = states;
         NB_STATES = nb_states;
         TRANSITIONS = transitions;
@@ -83,7 +80,7 @@ public class Automata {
 
     private State getStateFromName(String str) {
         for(State state: STATES)
-            if (str.equals(state.getName()))
+            if (str.equals(state.getNAME()))
                 return state;
         return null;
     }
@@ -103,65 +100,61 @@ public class Automata {
         return TRANSITIONS;
     }
 
-    public Automata Complete(){
+    public Automaton complete(){
         char[] alphabet = "abcdefghijklmnopqrstuvwxyz".toCharArray(); // alphabet of all possible inputs as an array of char
         int i, j;
         boolean[][] state_and_word = new boolean[NB_STATES][NB_WORD];
         boolean complete = true; // the automaton is considered complete until proven the reverse
 
         for(i=0;i<NB_STATES;i++) {
-            step_word[i][0] = String.valueOf(i);
-            for (j = 1; j < NB_WORD + 1; j++)
-                step_word[i][j] = "";
+            for (j = 1; j < NB_WORD; j++)
+                state_and_word[i][j] = false;
         }
 
         for(j=0;j<NB_STATES;j++){
             for(i=0;i<NB_TRANSITIONS;i++){
-                if(TRANSITIONS[i].getInit() == STATES[j] && !String.valueOf(TRANSITIONS[i].getWord()).equals("*")){
-                    state_and_word[j][TRANSITIONS[i].getWord() - 97] = true; // 97 is the int value of the ascii code for "a"
+                if(TRANSITIONS[i].getSTART() == STATES[j] && !String.valueOf(TRANSITIONS[i].getWORD()).equals("*")){
+                    state_and_word[j][TRANSITIONS[i].getWORD() - 97] = true; // 97 is the int value of the ascii code for "a"
                 }
             }
         }
         // check already complete or not
+
         for(boolean[] bls: state_and_word)
             for(boolean bl: bls)
                 if(!bl)
-                    complete = false;
-        if(complete)
+                    complete++;
+
+        if(complete == 0)
             return this; // if complete return this
         else {            // if not create the trash state, its transitions and the missing transitions
-            State[] new_states = new State[NB_STATES + 1];
-            Transition[] new_transitions = new Transition[NB_TRANSITIONS + 3]; // size doesn't matter but there is at least on more 2 more transitions to do (1 that is already lacking plus the at least one from trash to trash)
-            for (i = 0; i < NB_STATES; i++)
-                new_states[i] = STATES[i];
+
+            State[] new_states = new State[NB_STATES + 1]; // we need one more state to add the trash
+            Transition[] new_transitions = new Transition[NB_TRANSITIONS + complete + NB_WORD]; //already existing transition + missing transition + transition for the trash to trash
+
+            System.arraycopy(STATES, 0, new_states, 0, NB_STATES);
+            System.arraycopy(TRANSITIONS, 0, new_transitions, 0,NB_TRANSITIONS);
+
             new_states[NB_STATES] = new State("Trash", false, false); // creation of trash
+
             for (i = 0; i < NB_WORD; i++){ // all possible transitions from trash to trash
-                if (i == 0)
-                    new_transitions = addTransition(TRANSITIONS, new_states[NB_STATES], alphabet[i], new_states[NB_STATES]);
-                else
-                    new_transitions = addTransition(new_transitions, new_states[NB_STATES], alphabet[i], new_states[NB_STATES]);
+                new_transitions[nb_transition] = new Transition(new_states[NB_STATES], alphabet[i], new_states[NB_STATES]);
+                nb_transition ++;
             }
-            for(i=0;i<NB_STATES;i++) { //of course we won't check trash that was just done
+
+            for(i=0;i<NB_STATES;i++) { //of course, we won't check trash that was just done
                 for(j=0;j<NB_WORD;j++){
-                    if(!state_and_word[i][j])
-                        new_transitions = addTransition(new_transitions, STATES[i], alphabet[j], new_states[NB_TRANSITIONS]);
+                    if(!state_and_word[i][j]) {
+                        new_transitions[nb_transition] = new Transition(STATES[i], alphabet[j], new_states[NB_STATES]);
+                        nb_transition++;
+                    }
                 }
             }
-            return new Automata(new_states, NB_STATES+1, new_transitions, new_transitions.length, NB_WORD);
+
+            return new Automaton(new_states, NB_STATES+1, new_transitions, new_transitions.length, NB_WORD);
         }
-
-
-
     }
 
-    private Transition[] addTransition(Transition[] old_tr, State init, char word, State end){
-        Transition[] new_tr = new Transition[old_tr.length+1];
-        for(int i = 0; i<old_tr.length; i++)
-            new_tr[i] = old_tr[i];
-
-        new_tr[old_tr.length] = new Transition(init,word,end);
-        return new_tr;
-    }
 
     @Override
     public String toString() {
