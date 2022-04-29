@@ -104,31 +104,33 @@ public class Automata {
     }
 
     public Automata Complete(){
-        char[] alphabet = "abcdefghijklmnopqrstuvwxyz*".toCharArray(); // alphabet of all possible inputs as an array of char
+        char[] alphabet = "abcdefghijklmnopqrstuvwxyz".toCharArray(); // alphabet of all possible inputs as an array of char
         int i,j,k,w;
         boolean word_used;
         String[][] step_word = new String[NB_STATES+1][NB_WORD+1];
 
-        for(i=0;i<NB_STATES;i++)
-            step_word[i][0]=  String.valueOf(i);
-            for(j=1;j<NB_WORD+1;j++)
+        for(i=0;i<NB_STATES;i++) {
+            step_word[i][0] = String.valueOf(i);
+            for (j = 1; j < NB_WORD + 1; j++)
                 step_word[i][j] = "";
+        }
 
-        for(i=0;i<NB_TRANSITIONS;i++){
-            for(j=0;j<NB_STATES;j++){
+        for(j=0;j<NB_STATES;j++){
+            for(i=0;i<NB_TRANSITIONS;i++){
                 if(TRANSITIONS[i].getInit() == STATES[j]){
+                    word_used = false;
 
-                    word_used =false;
                     for(k=1;k<NB_WORD+1;k++){
                         if(String.valueOf(TRANSITIONS[i].getWord()) == step_word[j][k])
                             word_used = true;
                     }
                     for(w=1;w<NB_WORD+1;w++)
                         if(!word_used)
-                            if(step_word[j][w] == null) {
+                            if(step_word[j][w] == "" && step_word[j][w] != "*") {
 
                                 step_word[j][w] = String.valueOf(TRANSITIONS[i].getWord());
                                 word_used = true;
+
                             }
                 }
             }
