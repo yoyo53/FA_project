@@ -3,7 +3,7 @@ import java.io.FileReader;
 import java.io.BufferedReader;
 
 // Object that will represent an automaton
-public class Automata {
+public class Automaton {
     private final int NB_WORD;
 
     private final State[] STATES;                             // List of states of the automaton
@@ -12,7 +12,7 @@ public class Automata {
     private final Transition[] TRANSITIONS;                   // List of transitions of the automaton
     private final int NB_TRANSITIONS;               // Maximum number of transitions of the automaton
 
-    public Automata(String address_file) throws Exception{
+    public Automaton(String address_file) throws Exception{
         String[] file = getFile(address_file); // the file is a list of string where each element of the list is a line
 
         NB_WORD = Integer.parseInt(file[0]); //the first line gives the number of possible word
@@ -26,7 +26,7 @@ public class Automata {
         setTransitions(file);
     }
 
-    public Automata(int nb_word, State[] states, int nb_states, Transition[] transitions, int nb_transitions){
+    public Automaton(int nb_word, State[] states, int nb_states, Transition[] transitions, int nb_transitions){
         NB_WORD = nb_word;
         STATES = states;
         NB_STATES = nb_states;
@@ -95,7 +95,7 @@ public class Automata {
         return TRANSITIONS;
     }
 
-    public Automata Complete(){
+    public Automaton Complete(){
         char[] alphabet = "abcdefghijklmnopqrstuvwxyz".toCharArray(); // alphabet of all possible inputs as an array of char
         int i, j;
         boolean[][] step_word = new boolean[NB_STATES][NB_WORD];
