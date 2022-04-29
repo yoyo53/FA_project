@@ -101,6 +101,10 @@ public class Automaton {
         return TRANSITIONS;
     }
 
+    public int getNB_STATES() {
+        return NB_STATES;
+    }
+
     public Automaton complete(){
         char[] alphabet = "abcdefghijklmnopqrstuvwxyz".toCharArray(); // alphabet of all possible inputs as an array of char
         int i, j;
