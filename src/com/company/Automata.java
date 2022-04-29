@@ -106,7 +106,8 @@ public class Automata {
     public Automata Complete(){
         char[] alphabet = "abcdefghijklmnopqrstuvwxyz".toCharArray(); // alphabet of all possible inputs as an array of char
         int i, j;
-        boolean[][] step_word = new boolean[NB_STATES][NB_WORD];
+        boolean[][] state_and_word = new boolean[NB_STATES][NB_WORD];
+        boolean complete = true; // the automaton is considered complete until proven the reverse
 
         for(i=0;i<NB_STATES;i++) {
             step_word[i][0] = String.valueOf(i);
@@ -117,21 +118,40 @@ public class Automata {
         for(j=0;j<NB_STATES;j++){
             for(i=0;i<NB_TRANSITIONS;i++){
                 if(TRANSITIONS[i].getInit() == STATES[j] && !String.valueOf(TRANSITIONS[i].getWord()).equals("*")){
-                    step_word[j][TRANSITIONS[i].getWord() - 97] = true; // 97 is the int value of the ascii code for "a"
+                    state_and_word[j][TRANSITIONS[i].getWord() - 97] = true; // 97 is the int value of the ascii code for "a"
                 }
             }
         }
-
-        StringBuilder sb = new StringBuilder();
-        for(i=0;i<NB_STATES;i++){
-            for (j=0;j<NB_WORD;j++) {
-                sb.append(step_word[i][j]);
-                sb.append(" ");
+        // check already complete or not
+        for(boolean[] bls: state_and_word)
+            for(boolean bl: bls)
+                if(!bl)
+                    complete = false;
+        if(complete)
+            return this; // if complete return this
+        else {            // if not create the trash state, its transitions and the missing transitions
+            State[] new_states = new State[NB_STATES + 1];
+            Transition[] new_transitions = new Transition[NB_TRANSITIONS + 3]; // size doesn't matter but there is at least on more 2 more transitions to do (1 that is already lacking plus the at least one from trash to trash)
+            for (i = 0; i < NB_STATES; i++)
+                new_states[i] = STATES[i];
+            new_states[NB_STATES] = new State("Trash", false, false); // creation of trash
+            for (i = 0; i < NB_WORD; i++){ // all possible transitions from trash to trash
+                if (i == 0)
+                    new_transitions = addTransition(TRANSITIONS, new_states[NB_STATES], alphabet[i], new_states[NB_STATES]);
+                else
+                    new_transitions = addTransition(new_transitions, new_states[NB_STATES], alphabet[i], new_states[NB_STATES]);
             }
-            sb.append("\n---------\n");
+            for(i=0;i<NB_STATES;i++) { //of course we won't check trash that was just done
+                for(j=0;j<NB_WORD;j++){
+                    if(!state_and_word[i][j])
+                        new_transitions = addTransition(new_transitions, STATES[i], alphabet[j], new_states[NB_TRANSITIONS]);
+                }
+            }
+            return new Automata(new_states, NB_STATES+1, new_transitions, new_transitions.length, NB_WORD);
         }
-        System.out.println(sb.toString());
-        return this;
+
+
+
     }
 
     private Transition[] addTransition(Transition[] old_tr, State init, char word, State end){
