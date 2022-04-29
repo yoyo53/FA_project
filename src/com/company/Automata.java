@@ -1,7 +1,6 @@
 package com.company;
 import java.io.FileReader;
 import java.io.BufferedReader;
-import java.util.Arrays;
 
 // Object that will represent an automaton
 public class Automata {
@@ -102,7 +101,7 @@ public class Automata {
         boolean[][] step_word = new boolean[NB_STATES][NB_WORD];
 
         for(i = 0; i < NB_STATES; i++)
-            for (j = 1; j < NB_WORD + 1; j++)
+            for (j = 0; j < NB_WORD; j++)
                 step_word[i][j] = false;
 
         for(i = 0; i < NB_STATES; i++){
@@ -136,11 +135,16 @@ public class Automata {
 
     @Override
     public String toString() {
-        return "Automata{" +
-                "STATES=" + Arrays.toString(STATES) + "\n"+
-                ", NB_STATES=" + NB_STATES +
-                ", TRANSITIONS=" + Arrays.toString(TRANSITIONS) + "\n"+
-                ", NB_TRANSITIONS=" + NB_TRANSITIONS +
-                '}' + "\n";
+        StringBuilder sb = new StringBuilder();
+        sb.append("Automata:\n");
+        sb.append(NB_STATES);
+        sb.append(" states:\n");
+        for (State state: STATES)
+            sb.append(state);
+        sb.append(NB_TRANSITIONS);
+        sb.append(" transitions:\n");
+        for (Transition tr: TRANSITIONS)
+            sb.append(tr);
+        return sb.toString();
     }
 }

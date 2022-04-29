@@ -26,10 +26,6 @@ public class Transition {
 
     @Override
     public String toString() {
-        return "Transition{" +
-                "init=" + START +
-                ", end=" + END +
-                ", word=" + WORD +
-                '}' + "\n";
+        return "Transition from state " + START.getNAME() + " to state " + END.getNAME() + " via word '" + WORD +"'\n";
     }
 }

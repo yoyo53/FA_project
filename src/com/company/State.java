@@ -27,10 +27,17 @@ public class State {
 
     @Override
     public String toString() {
-        return "State{" +
-                "name='" + NAME + '\'' +
-                ", initial=" + INITIAL +
-                ", terminal=" + FINAL +
-                '}' + "\n";
+        StringBuilder sb = new StringBuilder();
+        sb.append("State ");
+        sb.append(NAME);
+        if (INITIAL)
+            sb.append(": initial");
+        else
+            sb.append(": not initial");
+        if (FINAL)
+            sb.append(" and final\n");
+        else
+            sb.append(" and not final\n");
+        return sb.toString();
     }
 }
