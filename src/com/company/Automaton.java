@@ -103,8 +103,9 @@ public class Automaton {
     public Automaton complete(){
         char[] alphabet = "abcdefghijklmnopqrstuvwxyz".toCharArray(); // alphabet of all possible inputs as an array of char
         int i, j;
-        boolean[][] state_and_word = new boolean[NB_STATES][NB_WORD];
-        boolean complete = true; // the automaton is considered complete until proven the reverse
+        boolean[][] state_and_word = new boolean[NB_STATES][NB_WORD]; // each state as a list of boolean that indicates whether the word is used or not, first element is for a, last is for z
+        int complete = 0;// the automaton is considered complete until proven the reverse
+
 
         for(i=0;i<NB_STATES;i++) { // we set all values to false
             for (j = 1; j < NB_WORD; j++)
