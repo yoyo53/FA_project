@@ -130,6 +130,191 @@ public class Automaton {
         return new_tr;
     }
 
+
+
+    public Automaton Minimized() {
+        State[][] groups, groups_temp;
+        String[] groups_name, groups_name_temp;
+        int[]  groups_size, groups_size_temp;
+        int nb_groups, nb_groups_temp;
+        StringBuilder state_type;
+        State[] new_states;
+        Transition[] new_transitions;
+        State end = null;
+        boolean found, equals, is_initial;
+        int i, j, k, l, m;
+
+        if (!isDeterminized())
+            System.out.println("This automaton is not determinized.");
+        else if (!isComplete())
+            System.out.println("This automaton is not complete.");
+
+        else {
+            nb_groups = 0;
+            groups = new State[NB_STATES][NB_STATES];
+            groups_name = new String[NB_STATES];
+            groups_size = new int[NB_STATES];
+            groups_temp = new State[NB_STATES][NB_STATES];
+            groups_name_temp = new String[NB_STATES];
+            groups_size_temp= new int[NB_STATES];
+            state_type = new StringBuilder();
+
+            for (i = 0; i < NB_STATES; i++) {
+                state_type.setLength(0);
+                if (STATES[i].isFINAL())
+                    state_type.append("T");
+                else
+                    state_type.append("NT");
+
+                j = 0;
+                found = false;
+                while (!found && j < nb_groups) {
+                    if (state_type.toString().equals(groups_name[j])) {
+                        groups[j][groups_size[j]] = STATES[i];
+                        groups_size[j]++;
+                        found = true;
+                    }
+                    j++;
+                }
+                if (!found) {
+                    groups[nb_groups][0] = STATES[i];
+                    groups_name[nb_groups] = state_type.toString();
+                    groups_size[nb_groups] = 1;
+                    nb_groups++;
+                }
+            }
+
+            do {
+                for (i = 0; i < nb_groups; i++)
+                    groups_name[i] = String.valueOf(i);
+
+                System.arraycopy(groups, 0, groups_temp, 0, nb_groups);
+                System.arraycopy(groups_name, 0, groups_name_temp, 0, nb_groups);
+                System.arraycopy(groups_size, 0, groups_size_temp, 0, nb_groups);
+                nb_groups_temp = nb_groups;
+
+                i = 0;
+                equals = true;
+                while (i < nb_groups) {
+                    state_type.setLength(0);
+                    for (j = 0; j < NB_WORD; j++) {
+                        k = 0;
+                        found = false;
+                        while (!found && k < nb_groups_temp) {
+                            l = 0;
+                            while (!found && l < groups_size_temp[k]) {
+                                if (groups_temp[k][l] == getTransition(groups[i][0], (char) (97 + NB_WORD))) {
+                                    state_type.append(groups_name_temp[k]);
+                                    state_type.append(".");
+                                    found = true;
+                                }
+                                l++;
+                            }
+                            k++;
+                        }
+                    }
+                    groups_name[i] = state_type.toString();
+
+                    for (j = 1; j < groups_size[i]; j++) {
+                        for (k = 0; k < NB_WORD; k++) {
+                            l = 0;
+                            found = false;
+                            while (!found && l < nb_groups_temp) {
+                                m = 0;
+                                while (!found && m < groups_size_temp[l]) {
+                                    if (groups_temp[l][m] == getTransition(groups[i][j], (char) (97 + NB_WORD))) {
+                                        state_type.append(groups_name_temp[l]);
+                                        state_type.append(".");
+                                        found = true;
+                                    }
+                                    l++;
+                                }
+                                k++;
+                            }
+                        }
+                        if (groups_name[i].equals(state_type.toString()))
+                            i++;
+                        else {
+                            equals = false;
+                            k = 0;
+                            found = false;
+                            while (!found && k < nb_groups) {
+                                if (groups_name[k].equals(state_type.toString())) {
+                                    groups[k][groups_size[k]] = groups[i][j];
+                                    groups_size[k]++;
+                                    found = true;
+                                }
+                                k++;
+                            }
+                            if (!found) {
+                                groups[nb_groups][0] = groups[i][j];
+                                groups_name[nb_groups] = state_type.toString();
+                                groups_size[nb_groups] = 1;
+                                nb_groups++;
+                            }
+                            System.arraycopy(groups[i], j, groups[i], j - 1, groups_size[i] - j);
+                            groups_size[i]--;
+                        }
+
+                    }
+                }
+            }
+            while (nb_groups != NB_STATES && !equals);
+            if (nb_groups == NB_STATES)
+                System.out.println("This automaton is already minimized.");
+            else {
+                new_states = new State[nb_groups];
+                new_transitions = new Transition[nb_groups * NB_WORD];
+                for (i = 0; i < nb_groups; i++) {
+                    is_initial = false;
+                    j = 0;
+                    while (!is_initial && j < groups_size[i]) {
+                        if (groups[i][j].isINITIAL())
+                            is_initial = true;
+                        j++;
+                    }
+                    new_states[i] = new State(String.valueOf(i), is_initial, groups[i][0].isFINAL());
+                }
+                for (i = 0; i < nb_groups; i++) {
+                    for (j = 0; j < NB_WORD; j++) {
+                        k = 0;
+                        found = false;
+                        while (!found && k < nb_groups) {
+                            l = 0;
+                            while (!found && l < groups_size[k]) {
+                                if (getTransition(new_states[i], (char)(97 + j)) == groups[k][l]) {
+                                    end = new_states[k];
+                                    found = true;
+                                }
+                                l++;
+                            }
+                            k++;
+                        }
+                        new_transitions[i * NB_WORD + j] = new Transition(new_states[i], (char)(97 + j), end);
+                    }
+                }
+                return new Automaton(NB_WORD, new_states, nb_groups, new_transitions, nb_groups * NB_WORD);
+            }
+        }
+        return this;
+    }
+
+    public boolean isDeterminized() {
+        return true;
+    }
+
+    public boolean isComplete() {
+        return true;
+    }
+
+    public State getTransition(State state, char word) {
+        for (Transition tr: TRANSITIONS)
+            if (tr.getSTART() == state && tr.getWORD() == word)
+                return tr.getEND();
+        return null;
+    }
+
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
