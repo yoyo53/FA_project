@@ -6,6 +6,7 @@ public class Main {
         Automaton at1 = new Automaton("Test.txt");
 
         System.out.println(at1.complete());
+        System.out.println(at1.complete().complement());
 
     }
 }
