@@ -95,38 +95,76 @@ public class Automaton {
         return TRANSITIONS;
     }
 
-    public Automaton Complete(){
+    public Automaton complete(){
         char[] alphabet = "abcdefghijklmnopqrstuvwxyz".toCharArray(); // alphabet of all possible inputs as an array of char
         int i, j;
-        boolean[][] step_word = new boolean[NB_STATES][NB_WORD];
+        boolean[][] state_and_word = new boolean[NB_STATES][NB_WORD]; // each state as a list of boolean that indicates whether the word is used or not, first element is for a, last is for z
+        int complete = 0;// the automaton is considered complete until proven the reverse
 
-        for (i = 0; i < NB_STATES; i++)
-            for (j = 0; j < NB_WORD; j++)
-                step_word[i][j] = false;
 
-        for (i = 0; i < NB_STATES; i++)
-            for (j = 0; j < NB_TRANSITIONS; j++)
-                if (TRANSITIONS[j].getSTART() == STATES[i] && !String.valueOf(TRANSITIONS[j].getWORD()).equals("*"))
-                    step_word[i][TRANSITIONS[j].getWORD() - 97] = true; // 97 is the int value of the ascii code for "a"
-
-        StringBuilder sb = new StringBuilder();
-        for (i = 0; i < NB_STATES; i++){
-            for (j = 0; j < NB_WORD; j++) {
-                sb.append(step_word[i][j]);
-                sb.append(" ");
-            }
-            sb.append("\n---------\n");
+        for(i=0;i<NB_STATES;i++) { // we set all values to false
+            for (j = 1; j < NB_WORD; j++)
+                state_and_word[i][j] = false;
         }
-        System.out.println(sb);
-        return this;
+
+        for(j=0;j<NB_STATES;j++){
+            for(i=0;i<NB_TRANSITIONS;i++){
+                if(TRANSITIONS[i].getSTART() == STATES[j] && !String.valueOf(TRANSITIONS[i].getWORD()).equals("*")){ // if the state as a transition using a word we put true in the list because we know it's used
+                    state_and_word[j][TRANSITIONS[i].getWORD() - 97] = true; // 97 is the int value of the ascii code for "a"
+                }
+            }
+        }
+        // check already complete or not
+        for(boolean[] bls: state_and_word)
+            for(boolean bl: bls)
+                if(!bl)
+                    complete++;
+
+        if(complete == 0)
+            return this; // if complete return this
+
+        else {            // if not create the trash state, its transitions and the missing transitions
+
+            int nb_transition = NB_TRANSITIONS; // index for the new transition list
+            State[] new_states = new State[NB_STATES + 1]; // we need one more state to add the trash
+            Transition[] new_transitions = new Transition[NB_TRANSITIONS + complete + NB_WORD]; //already existing transition + missing transition + transition for the trash to trash
+
+            System.arraycopy(STATES, 0, new_states, 0, NB_STATES);
+            System.arraycopy(TRANSITIONS, 0, new_transitions, 0,NB_TRANSITIONS);
+
+            new_states[NB_STATES] = new State("Trash", false, false); // creation of trash
+
+            for (i = 0; i < NB_WORD; i++){ // all possible transitions from trash to trash
+                new_transitions[nb_transition] = new Transition(new_states[NB_STATES], alphabet[i], new_states[NB_STATES]);
+                nb_transition ++;
+            }
+
+            for(i=0;i<NB_STATES;i++) { //of course, we won't check trash that was just done
+                for(j=0;j<NB_WORD;j++){
+                    if(!state_and_word[i][j]) {
+                        new_transitions[nb_transition] = new Transition(STATES[i], alphabet[j], new_states[NB_STATES]); // we add the missing transitions
+                        nb_transition++;
+                    }
+                }
+            }
+
+            return new Automaton(new_states, NB_STATES+1, new_transitions, new_transitions.length, NB_WORD); // return the new Automaton
+        }
     }
 
-    private Transition[] addTransition(Transition[] old_tr, State start, char word, State end){
-        Transition[] new_tr = new Transition[old_tr.length + 1];
+    public Automaton complement(){
+        State[] new_states = new State[NB_STATES];
 
+        for(int i = 0; i<NB_STATES; i++){
+            new_states[i] = new State(STATES[i].getNAME(), STATES[i].isINITIAL(), !STATES[i].isFINAL());
+        }
+        return new Automaton(new_states, NB_STATES, TRANSITIONS, NB_TRANSITIONS, NB_WORD);
+    }
+
+    public Transition[] addTransition(Transition[] old_tr, State start, char word, State end){
+        Transition[] new_tr = new Transition[old_tr.length+1];
         System.arraycopy(old_tr, 0, new_tr, 0, old_tr.length);
         new_tr[old_tr.length] = new Transition(start, word, end);
-
         return new_tr;
     }
 
@@ -312,6 +350,151 @@ public class Automaton {
             if (tr.getSTART() == state && tr.getWORD() == word)
                 return tr.getEND();
         return null;
+    }
+
+
+    public State[] addState(State[] old_st, String name, boolean initial, boolean terminal){
+        State[] new_st = new State[old_st.length+1];
+        System.arraycopy(old_st, 0, new_st, 0, old_st.length);
+        new_st[old_st.length] = new State(name, initial, terminal);
+        return new_st;
+    }
+
+    public String[] addString(String[] list, String str){
+        String[] new_list = new String[list.length+1];
+        System.arraycopy(list, 0, new_list, 0, list.length);
+        new_list[list.length] = str;
+        return new_list;
+    }
+
+    public boolean isSynchronous(Automaton at){          // Allows to check if a given automaton is synchronous or not
+        for(int i = 0; i<at.NB_TRANSITIONS;i++){
+            if(at.getTRANSITIONS()[i].getWORD() == '*'){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean isIn(Object[] list, Object word){
+        for (int i = 0; i < list.length; i++) {
+            if(Objects.equals(word, list[i])){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public String[] getAlphabet(Automaton at){
+        String[] alphabet = new String[0];
+        for (Transition tr:
+                at.getTRANSITIONS()) {
+            if(!(isIn(alphabet, String.valueOf(tr.getWORD())))){
+                alphabet = addString(alphabet, String.valueOf(tr.getWORD()));
+            }
+        }
+        return alphabet;
+    }
+
+    public State[] getStateListFromTransitions(Transition[] tr_list){
+        State[] result = new State[0];
+        for (Transition tr:
+                tr_list) {
+            if(!(isIn(result, tr.getSTART()))){
+                result = addState(result, tr.getSTART().getNAME(), tr.getSTART().isINITIAL(), tr.getSTART().isFINAL());
+            }
+            if(!(isIn(result, tr.getEND()))){
+                result = addState(result, tr.getEND().getNAME(), tr.getEND().isINITIAL(), tr.getEND().isFINAL());
+            }
+        }
+        return result;
+    }
+
+
+    public Automaton determinize(Automaton at){
+        Transition[] tr = new Transition[0];
+        State[] st = new State[0];
+        int tr_size = 0;
+        int st_size = 0;
+
+        if(isSynchronous(at)){  // Case where there are no epsilon transitions
+
+            StringBuilder sb = new StringBuilder();         // Will contain the name of the initial state
+            boolean term = false;       // Will determine if the initial state is also final
+            for(int i = 0 ; i<at.NB_STATES ; i++){
+                if(at.getSTATES()[i].isINITIAL()){
+                    sb.append(at.getSTATES()[i].getNAME());
+                    if(at.getSTATES()[i].isFINAL()){     // If one of the original automaton's initial states is also final, then the composed initial state will also be final
+                        term = true;
+                    }
+                }
+            }
+            st = addState(st, sb.toString(),true, term);    // We add the composed initial state to the list of states
+            st_size ++;
+
+            String[] alphabet = getAlphabet(at);       // an array containing each element of the alphabet of the initial automaton
+            for(int i = 0; i<alphabet.length;i++){
+                boolean termi = false;  // Determine if the end state of the transition is terminal or not
+                StringBuilder sb2 = new StringBuilder();
+                for(int j = 0; j < at.NB_TRANSITIONS ; j++){
+                    if(at.getTRANSITIONS()[j].getSTART().isINITIAL() && String.valueOf(at.getTRANSITIONS()[j].getWORD()).equals(alphabet[i])){
+                        sb2.append(at.getTRANSITIONS()[j].getEND().getNAME());
+                        if(at.getTRANSITIONS()[j].getEND().isFINAL()){
+                            termi = true;
+                        }
+                    }
+                }
+                State end_transi;
+                if(sb2.toString().equals(st[0].getNAME())){
+                    end_transi = new State(sb2.toString(), true, termi);
+                }
+                else{
+                    end_transi = new State(sb2.toString(), false, termi);
+                }
+                tr = addTransition(tr, st[0], alphabet[i].charAt(0), end_transi);
+                tr_size++;
+            }
+
+            State[] all_current_states = getStateListFromTransitions(tr);
+            while(!(Arrays.equals(st, all_current_states))){
+                for (State ste:
+                        all_current_states) {
+                    if (!(isIn(st, ste))) {
+                        st = addState(st, ste.getNAME(), ste.isINITIAL(), ste.isFINAL());
+                        st_size++;
+
+                        for (int i = 0; i < alphabet.length; i++) {
+                            StringBuilder sb3 = new StringBuilder();
+                            term = false;
+                            for (Transition tre :
+                                    TRANSITIONS) {
+                                if (ste.getNAME().contains(tre.getSTART().getNAME()) && String.valueOf(tre.getWORD()).equals(alphabet[i]) && !(sb3.toString().contains(tre.getEND().getNAME()))) {
+                                    sb3.append(tre.getEND().getNAME());
+                                    if (tre.getEND().isFINAL()) {
+                                        term = true;
+                                    }
+                                }
+                            }
+                            State end_transi;
+                            if (sb3.toString().equals(st[0].getNAME())) {
+                                end_transi = new State(sb3.toString(), true, term);
+                            } else {
+                                end_transi = new State(sb3.toString(), false, term);
+                            }
+                            tr = addTransition(tr, ste, alphabet[i].charAt(0), end_transi);
+                            tr_size++;
+                        }
+                    }
+                }
+                all_current_states = getStateListFromTransitions(tr);
+            }
+
+        }
+
+        else{                   // Case where there are epsilon transitions
+            return at;
+        }
+        return new Automaton(st, st_size, tr, tr_size, 3);
     }
 
 

@@ -1,5 +1,7 @@
 package com.company;
 
+import java.util.Objects;
+
 // Object that will represent a transition
 public class Transition {
     private final State START;         // State from which the transition goes
@@ -27,5 +29,18 @@ public class Transition {
     @Override
     public String toString() {
         return "Transition from state " + START.getNAME() + " to state " + END.getNAME() + " via word '" + WORD +"'\n";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Transition that = (Transition) o;
+        return WORD == that.WORD && Objects.equals(START, that.START) && Objects.equals(END, that.END);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(START, END, WORD);
     }
 }
