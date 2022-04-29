@@ -2,48 +2,30 @@ package com.company;
 
 // Object that will represent a transition
 public class Transition {
-    private State init;         // State from which the transition goes
-    private State end;          // State to which the transition goes
-    private char word;        // Name of the transition (part of the alphabet)
+    private final State START;         // State from which the transition goes
+    private final State END;          // State to which the transition goes
+    private final char WORD;        // Name of the transition (part of the alphabet)
 
-    public Transition (){}          // Default constructor
-
-    public Transition(State init, char word, State end){          // Constructor with required parameters to initialize the automaton
-        this.init = init;
-        this.end = end;
-        this.word = word;
+    public Transition(State start, char word, State end){          // Constructor with required parameters to initialize the automaton
+        START = start;
+        END = end;
+        WORD = word;
     }
 
-    public State getInit() {
-        return init;
+    public State getSTART() {
+        return START;
     }
 
-    public void setInit(State init) {
-        this.init = init;
+    public char getWORD() {
+        return WORD;
     }
 
-    public char getWord() {
-        return word;
-    }
-
-    public void setWord(char word) {
-        this.word = word;
-    }
-
-    public State getEnd() {
-        return end;
-    }
-
-    public void setEnd(State end) {
-        this.end = end;
+    public State getEND() {
+        return END;
     }
 
     @Override
     public String toString() {
-        return "Transition{" +
-                "init=" + init +
-                ", end=" + end +
-                ", word=" + word +
-                '}' + "\n";
+        return "Transition from state " + START.getNAME() + " to state " + END.getNAME() + " via word '" + WORD +"'\n";
     }
 }

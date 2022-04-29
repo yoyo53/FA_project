@@ -2,48 +2,42 @@ package com.company;
 
 // Object that will represent a state
 public class State {
-    private String name;
-    private boolean initial;
-    private boolean terminal;
+    private final String NAME;
+    private final boolean INITIAL;
+    private final boolean FINAL;
 
-    public State(){}
 
     public State(String name, boolean initial, boolean terminal){
-        this.name = name;
-        this.initial = initial;
-        this.terminal = terminal;
+        this.NAME = name;
+        this.INITIAL = initial;
+        this.FINAL = terminal;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public String getNAME() {
+        return NAME;
     }
 
-    public String getName() {
-        return name;
+    public boolean isINITIAL() {
+        return INITIAL;
     }
 
-    public boolean isInitial() {
-        return initial;
-    }
-
-    public void setInitial(boolean initial) {
-        this.initial = initial;
-    }
-
-    public boolean isTerminal() {
-        return terminal;
-    }
-
-    public void setTerminal(boolean terminal) {
-        this.terminal = terminal;
+    public boolean isFINAL() {
+        return FINAL;
     }
 
     @Override
     public String toString() {
-        return "State{" +
-                "name='" + name + '\'' +
-                ", initial=" + initial +
-                ", terminal=" + terminal +
-                '}' + "\n";
+        StringBuilder sb = new StringBuilder();
+        sb.append("State ");
+        sb.append(NAME);
+        if (INITIAL)
+            sb.append(": initial");
+        else
+            sb.append(": not initial");
+        if (FINAL)
+            sb.append(" and final\n");
+        else
+            sb.append(" and not final\n");
+        return sb.toString();
     }
 }
