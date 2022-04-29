@@ -104,9 +104,52 @@ public class Automata {
     }
 
     public Automata Complete(){
-        /*
-        We create a new automaton and we make it complete
-        */
+        char[] alphabet = "abcdefghijklmnopqrstuvwxyz*".toCharArray(); // alphabet of all possible inputs as an array of char
+        int i,j,k,w;
+        boolean word_used;
+        String[][] step_word = new String[NB_STATES+1][NB_WORD+1];
+
+        for(i=0;i<NB_STATES;i++)
+            step_word[i][0]=  String.valueOf(i);
+            for(j=1;j<NB_WORD+1;j++)
+                step_word[i][j] = "";
+
+        for(i=0;i<NB_TRANSITIONS;i++){
+            for(j=0;j<NB_STATES;j++){
+                if(TRANSITIONS[i].getInit() == STATES[j]){
+
+                    word_used =false;
+                    for(k=1;k<NB_WORD+1;k++){
+                        if(String.valueOf(TRANSITIONS[i].getWord()) == step_word[j][k])
+                            word_used = true;
+                    }
+                    for(w=1;w<NB_WORD+1;w++)
+                        if(!word_used)
+                            if(step_word[j][w] == null) {
+
+                                step_word[j][w] = String.valueOf(TRANSITIONS[i].getWord());
+                                word_used = true;
+                            }
+                }
+            }
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for(i=0;i<NB_STATES;i++){
+            for (j=0;j<NB_WORD+1;j++) {
+                sb.append(step_word[i][j]);
+                sb.append(" ");
+            }
+            sb.append("\n---------\n");
+        }
+        System.out.println(sb.toString());
+        return this;
+    }
+/*
+    public Automata Complete(){
+
+        //We create a new automaton and we make it complete
+
 
         char[] alphabet = "abcdefghijklmnopqrstuvwxyz".toCharArray(); // alphabet of all possible inputs as an array of char
         int i, j;
@@ -132,16 +175,18 @@ public class Automata {
     }
 
     private Automata CompleteAddTrashAndTransitions(String[][] check_states){
-        /*
-        Add the Trash state and the necessary transitions
-         */
+
+        //Add the Trash state and the necessary transitions
+
         char[] alphabet = "abcdefghijklmnopqrstuvwxyz".toCharArray();
         int i,j,step;
         boolean trash = false; // trash state not created yet
+        State[] new_states = new State[NB_STATES+1]; // current state plus the space for the trash
+        Transition[] new_transitions = new Transition[NB_TRANSITIONS]; // current transitions, size doesn't matter
+
         for(i = 0; i<NB_WORD; i++){
             step = 0; // step represent the current state we are looking for according to the word
-            State[] new_states = new State[NB_STATES+1]; // current state plus the space for the trash
-            Transition[] new_transitions = new Transition[NB_TRANSITIONS]; // current transitions, size doesn't matter
+
 
             for(j = 1; j<check_states[i].length; j++) {
                 if (step == Integer.parseInt(check_states[i][j])) //if the state already use the word we go on
@@ -163,14 +208,14 @@ public class Automata {
                         trash = true;
                     }
                     new_transitions = addTransition(new_transitions, new_states[step], alphabet[i], new_states[NB_STATES]); // we add the missing transitions
-                    step += 1;
+                    step+= 1;
                 }
             }
-            return new Automata(new_states, new_states.length, new_transitions, new_transitions.length, NB_WORD);
+
 
         }
-        return this;
-    }
+        return new Automata(new_states, new_states.length, new_transitions, new_transitions.length, NB_WORD);
+    }*/
 
     private Transition[] addTransition(Transition[] old_tr, State init, char word, State end){
         Transition[] new_tr = new Transition[old_tr.length+1];
