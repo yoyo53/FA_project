@@ -1,6 +1,8 @@
 package com.company;
 import java.io.FileReader;
 import java.io.BufferedReader;
+import java.util.Arrays;
+import java.util.Objects;
 
 // Object that will represent an automaton
 public class Automaton {
@@ -362,6 +364,31 @@ public class Automaton {
         return true;
     }
 
+    public String get_epsilon_closure(State ste){
+        StringBuilder closure = new StringBuilder();
+        closure.append(ste.getNAME());
+        for (Transition tr:
+             TRANSITIONS) {
+            if(tr.getWORD() == '*' && Objects.equals(tr.getSTART().getNAME(), ste.getNAME()) && !(closure.toString().contains(tr.getEND().getNAME()))){
+                if(closure.toString().length() != 0){
+                    closure.append(".");
+                }
+                closure.append(get_epsilon_closure(tr.getEND()));
+            }
+        }
+        return closure.toString();
+    }
+
+    public boolean isIn(Object[] list, Object word){
+        for (int i = 0; i < list.length; i++) {
+            if(Objects.equals(word, list[i])){
+                return true;
+            }
+        }
+        return false;
+    }
+
+
     public Automaton determinize(){
         Transition[] new_transitions = new Transition[0];
         State[] new_states = new State[0];
@@ -464,8 +491,60 @@ public class Automaton {
             }
             return new Automaton(NB_WORD, new_states, nb_new_states, new_transitions, nb_new_transitions);
         }
+
         else{                   // Case where there are epsilon transitions
-            return this;
+
+            // Get all the states that have incoming or outgoing non epsilon transitions
+            for (Transition tr:
+                    TRANSITIONS) {
+                if(tr.getWORD() != '*' && !(isIn(new_states, tr.getEND()))){
+                    new_states = addState(new_states, tr.getEND().getNAME(), tr.getEND().isINITIAL(), tr.getEND().isFINAL());
+                    nb_new_states++;
+                    if(!(isIn(new_states, tr.getSTART()))){
+                        new_states = addState(new_states, tr.getSTART().getNAME(), tr.getSTART().isINITIAL(), tr.getSTART().isFINAL());
+                        nb_new_states++;
+                    }
+                }
+            }
+
+            // Adjust the initial and final states
+            for (State st:
+                 STATES) {
+                if(st.isINITIAL()){
+                    String[] closure = get_epsilon_closure(st).split("\\.");
+                    for (int m = 1; m < closure.length; m++) {
+                        if(isIn(new_states, getStateFromName(closure[m]))){
+                            for (State ste:
+                                 new_states) {
+                                if(Objects.equals(ste.getNAME(), closure[m])){
+                                    ste.setINITIAL(true);
+                                }
+                            }
+                        }
+                    }
+                }
+                if(st.isFINAL()){
+                    String[] closure = get_epsilon_closure(st).split("\\.");
+                    for (int m = 0; m < new_states.length; m++) {
+                        if(isIn(get_epsilon_closure(new_states[m]).split("\\."), st.getNAME())){
+                            new_states[m].setFINAL(true);
+                        }
+                    }
+                }
+            }
+
+            // Keep only useful transitions
+            for (Transition tr:
+                 TRANSITIONS) {
+                if(tr.getWORD() != '*'){
+                    new_transitions = addTransition(new_transitions, tr.getSTART(), tr.getWORD(), tr.getEND());
+                    nb_new_transitions++;
+                }
+            }
+
+            // We now have the equivalent synchronous automaton. We will then determinize it using the method presented above
+            Automaton synchronous_equivalent_at = new Automaton(NB_WORD, new_states, nb_new_states, new_transitions, nb_new_transitions);
+            return synchronous_equivalent_at.determinize();
         }
     }
 
