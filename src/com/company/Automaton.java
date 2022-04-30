@@ -95,7 +95,6 @@ public class Automaton {
         return TRANSITIONS;
     }
 
-
     public int getNB_STATES() {
         return NB_STATES;
     }
@@ -507,6 +506,37 @@ public class Automaton {
         return this;
     }
 
+    public boolean testWord(String word) {
+        /*
+        Return true if the automaton recognize the word and false otherwise
+        */
+        for (int i = 0; i < NB_STATES; i++) {
+            if (STATES[i].isINITIAL() && testWordByState(word, STATES[i]))
+                return true;    // recognize the word if at least one of the initial states recognize it
+        }
+        return false;    // If none of the initial states recognize the word then it's not recognized by the automaton
+    }
+
+    private boolean testWordByState(String word, State state) {
+        /*
+        Return true is there is at least path starting from the state 'state' that recognize the word and false otherwise
+        */
+        if (word.isEmpty())   // recognize the word if we reach its end and if the current state is final
+            return state.isFINAL();
+        for (int i = 0; i < NB_TRANSITIONS; i++) {
+            // if there are transitions starting from this state with the fist character of the word, check if at least
+            // one of the end states of those transitions recognize the rest of the word, if yes the word is recognized
+            if (TRANSITIONS[i].getWORD() == word.charAt(0) && TRANSITIONS[i].getSTART() == state)
+                if (testWordByState(word.substring(1), TRANSITIONS[i].getEND()))
+                    return true;
+            // if there are epsilon transitions starting from this state, check if the at least one of the end states
+            // of those transitions recognize the word, if yes the word is recognized
+            if (TRANSITIONS[i].getWORD() == '*' && TRANSITIONS[i].getSTART() == state)
+                if (testWordByState(word, TRANSITIONS[i].getEND()))
+                    return true;
+        }
+        return false; // return false if none of the paths starting from this state recognize the word
+    }
 
     @Override
     public String toString() {
