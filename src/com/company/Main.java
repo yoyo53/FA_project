@@ -3,19 +3,49 @@ package com.company;
 public class Main {
 
     public static void main(String[] args) throws Exception{
-        Automaton at = new Automaton("determinize_test.txt");
-        Automaton at2 = at.determinize();
-        Automaton at3 = at2.Minimized();
-        System.out.println(at);
-        System.out.println(at2);
-        System.out.println(at3);
+        Automaton FA = new Automaton("determinize_test.txt");
+        Automaton DFA = FA.determinize();
+        Automaton CDFA = DFA.complete();
+        Automaton MCDFA = CDFA.minimize();
+        Automaton MCDFAcomp = MCDFA.complement();
+        String word;
 
-        Automaton at1 = new Automaton("Test.txt"); // test of testWord function
-        System.out.println(at1.complete());
-        System.out.println(at1.complete().complement());
+        System.out.println("----------------------------------------------------------------------");
+        System.out.println("Initial automaton:");
+        System.out.println(FA);
+        System.out.println("----------------------------------------------------------------------\n");
 
-        System.out.println(at1.complete().testWord("a")); // should return false
-        System.out.println(at1.complete().testWord("")); // should return true
+        System.out.println("----------------------------------------------------------------------");
+        System.out.println("Deterministic automaton:");
+        System.out.println(DFA);
+        System.out.println("----------------------------------------------------------------------\n");
+
+        System.out.println("----------------------------------------------------------------------");
+        System.out.println("Complete deterministic automaton:");
+        System.out.println(CDFA);
+        System.out.println("----------------------------------------------------------------------\n");
+
+        System.out.println("----------------------------------------------------------------------");
+        System.out.println("Minimal complete deterministic automaton:");
+        System.out.println(MCDFA);
+        System.out.println("----------------------------------------------------------------------\n");
+
+        System.out.println("----------------------------------------------------------------------");
+        System.out.println("Complement of the minimal complete deterministic automaton::");
+        System.out.println(MCDFAcomp);
+        System.out.println("----------------------------------------------------------------------\n");
+
+        word = "aaaaaaaaaa";
+        if (MCDFA.testWord(word))
+            System.out.println("The word '" + word + "' is recognized by the automaton.");
+        else
+            System.out.println("The word '" + word + "' is not recognized by the automaton");
+
+        word = "ba";
+        if (MCDFA.testWord(word))
+            System.out.println("The word '" + word + "' is recognized by the automaton.");
+        else
+            System.out.println("The word '" + word + "' is not recognized by the automaton");
 
     }
 

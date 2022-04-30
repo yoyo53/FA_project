@@ -26,6 +26,14 @@ public class Transition {
 
     @Override
     public String toString() {
-        return "Transition from state " + START.getNAME() + " to state " + END.getNAME() + " via word '" + WORD +"'\n";
+        StringBuilder sb = new StringBuilder();
+        sb.append("Transition from state ");
+        sb.append(START.getNAME());
+        sb.append(" to state ");
+        sb.append(END.getNAME());
+        sb.append(" via word '");
+        sb.append(WORD);
+        sb.append("'");
+        return sb.toString();
     }
 }

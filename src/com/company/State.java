@@ -1,18 +1,15 @@
 package com.company;
 
-import java.util.Objects;
-
 // Object that will represent a state
 public class State {
     private final String NAME;
-    private boolean INITIAL;
-    private boolean FINAL;
-
+    private final boolean INITIAL;
+    private final boolean FINAL;
 
     public State(String name, boolean initial, boolean terminal){
-        this.NAME = name;
-        this.INITIAL = initial;
-        this.FINAL = terminal;
+        NAME = name;
+        INITIAL = initial;
+        FINAL = terminal;
     }
 
     public String getNAME() {
@@ -27,10 +24,6 @@ public class State {
         return FINAL;
     }
 
-    public void setINITIAL(boolean INITIAL){this.INITIAL = INITIAL;}
-
-    public void setFINAL(boolean FINAL) {this.FINAL = FINAL;}
-
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -41,22 +34,9 @@ public class State {
         else
             sb.append(": not initial");
         if (FINAL)
-            sb.append(" and final\n");
+            sb.append(" and final");
         else
-            sb.append(" and not final\n");
+            sb.append(" and not final");
         return sb.toString();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        State state = (State) o;
-        return INITIAL == state.INITIAL && FINAL == state.FINAL && Objects.equals(NAME, state.NAME);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(NAME, INITIAL, FINAL);
     }
 }
