@@ -1,7 +1,5 @@
 package com.company;
 
-import java.util.Objects;
-
 // Object that will represent a state
 public class State {
     private final String NAME;
@@ -41,18 +39,5 @@ public class State {
         else
             sb.append(" and not final\n");
         return sb.toString();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        State state = (State) o;
-        return INITIAL == state.INITIAL && FINAL == state.FINAL && Objects.equals(NAME, state.NAME);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(NAME, INITIAL, FINAL);
     }
 }

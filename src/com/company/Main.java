@@ -8,8 +8,11 @@ public class Main {
         //System.out.println(at1.complete().complement());
 
 
-        Automaton at = new Automaton("C:\\Users\\capel\\IdeaProjects\\FA_project\\src\\com\\company\\determinize_test.txt");
-        Automaton at2 = at.determinize(at);
+        Automaton at = new Automaton("determinize_test.txt");
+        Automaton at2 = at.determinize();
+        Automaton at3 = at2.Minimized();
+        System.out.println(at);
         System.out.println(at2);
+        System.out.println(at3);
     }
 }
