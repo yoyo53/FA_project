@@ -7,13 +7,20 @@ public class Main {
         //System.out.println(at1.complete());
         //System.out.println(at1.complete().complement());
 
-
+        /*
         Automaton at = new Automaton("determinize_test.txt");
         Automaton at2 = at.determinize();
         Automaton at3 = at2.Minimized();
         System.out.println(at);
         System.out.println(at2);
-        System.out.println(at3);
+        System.out.println(at3); */
+
+        /*
+        Automaton at1 = new Automaton("Test.txt"); // test of testWord function
+        System.out.println(testWord("a",at1.complete())); // should return false
+        System.out.println(testWord("",at1.complete())); // should return true
+        */
+
     }
 
     public static boolean testWord(String input, Automaton automaton) {
@@ -27,12 +34,10 @@ public class Main {
 
         State current_state = getInitial(automaton.getSTATES()); // we start at the first state
 
-        for(char w:word){
-            for (Transition tr: automaton.getTRANSITIONS()){
+        for(char w:word)
+            for (Transition tr: automaton.getTRANSITIONS())
                 if(tr.getSTART() == current_state && tr.getWORD() == w)
                     current_state = tr.getEND();
-            }
-        }
 
         return current_state.isFINAL();
     }
@@ -44,5 +49,6 @@ public class Main {
         }
         return null;
     }
+
 }
 
