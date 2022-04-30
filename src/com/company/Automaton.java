@@ -97,60 +97,61 @@ public class Automaton {
         return TRANSITIONS;
     }
 
+    public int getNB_STATES() {
+        return NB_STATES;
+    }
+
     public Automaton complete(){
         int i, j;
         boolean[][] state_and_word = new boolean[NB_STATES][NB_WORD]; // each state as a list of boolean that indicates whether the word is used or not, first element is for 'a', last is for 'z'
-        int complete = 0;// the automaton is considered complete until proven the reverse
+        int nb_missing, nb_transition;
+        State[] new_states;
+        Transition[] new_transitions;
 
-
-        for (i = 0; i <NB_STATES; i++) { // we set all values to false
-            for (j = 1; j < NB_WORD; j++)
-                state_and_word[i][j] = false;
-        }
-
-        for(j = 0; j < NB_STATES; j++){
-            for(i = 0; i < NB_TRANSITIONS; i++){
-                if (TRANSITIONS[i].getSTART() == STATES[j] && !String.valueOf(TRANSITIONS[i].getWORD()).equals("*")){ // if the state as a transition using a word we put true in the list because we know it's used
-                    state_and_word[j][TRANSITIONS[i].getWORD() - 97] = true; // 97 is the int value of the ascii code for "a"
-                }
-            }
-        }
-        // check already complete or not
-        for (boolean[] bls: state_and_word)
-            for (boolean bl: bls)
-                if (!bl)
-                    complete++;
-
-        if (complete == 0)
-            return this; // if complete return this
-
+        if (isComplete()) // check if the automaton is already complete
+            System.out.println("This automaton is already complete.");
         else {            // if not create the trash state, its transitions and the missing transitions
 
-            int nb_transition = NB_TRANSITIONS; // index for the new transition list
-            State[] new_states = new State[NB_STATES + 1]; // we need one more state to add the trash
-            Transition[] new_transitions = new Transition[NB_TRANSITIONS + complete + NB_WORD]; //already existing transition + missing transition + transition for the trash to trash
-
-            System.arraycopy(STATES, 0, new_states, 0, NB_STATES);
-            System.arraycopy(TRANSITIONS, 0, new_transitions, 0,NB_TRANSITIONS);
-
-            new_states[NB_STATES] = new State("Trash", false, false); // creation of trash
-
-            for (i = 0; i < NB_WORD; i++){ // all possible transitions from trash to trash
-                new_transitions[nb_transition] = new Transition(new_states[NB_STATES], (char)(97 + i), new_states[NB_STATES]);
-                nb_transition ++;
+            for (i = 0; i < NB_STATES; i++) { // we set all values to false
+                for (j = 1; j < NB_WORD; j++)
+                    state_and_word[i][j] = false;
             }
 
-            for (i = 0; i < NB_STATES; i++) { //of course, we won't check trash that was just done
-                for (j = 0; j < NB_WORD; j++){
-                    if (!state_and_word[i][j]) {
-                        new_transitions[nb_transition] = new Transition(STATES[i], (char)(97 + j), new_states[NB_STATES]); // we add the missing transitions
-                        nb_transition++;
+            nb_missing = NB_STATES * NB_WORD;
+            for (j = 0; j < NB_STATES; j++) {
+                for (i = 0; i < NB_TRANSITIONS; i++) {
+                    if (TRANSITIONS[i].getSTART() == STATES[j] && !(TRANSITIONS[i].getWORD() == '*' && !state_and_word[j][TRANSITIONS[i].getWORD() - 97])) { // if the state as a transition using a word we put true in the list because we know it's used
+                        state_and_word[j][TRANSITIONS[i].getWORD() - 97] = true; // 97 is the int value of the ascii code for "a"
+                        nb_missing--;
                     }
                 }
             }
 
+            nb_transition = NB_TRANSITIONS; // index for the new transition list
+            new_states = new State[NB_STATES + 1]; // we need one more state to add the trash
+            new_transitions = new Transition[NB_TRANSITIONS + nb_missing + NB_WORD]; //already existing transition + missing transition + transition for the trash to trash
+
+            System.arraycopy(STATES, 0, new_states, 0, NB_STATES);
+            System.arraycopy(TRANSITIONS, 0, new_transitions, 0, NB_TRANSITIONS);
+
+            new_states[NB_STATES] = new State("Trash", false, false); // creation of trash
+
+            for (i = 0; i < NB_WORD; i++) { // all possible transitions from trash to trash
+                new_transitions[nb_transition] = new Transition(new_states[NB_STATES], (char) (97 + i), new_states[NB_STATES]);
+                nb_transition++;
+            }
+
+            for (i = 0; i < NB_STATES; i++) { //of course, we won't check trash that was just done
+                for (j = 0; j < NB_WORD; j++) {
+                    if (!state_and_word[i][j]) {
+                        new_transitions[nb_transition] = new Transition(STATES[i], (char) (97 + j), new_states[NB_STATES]); // we add the missing transitions
+                        nb_transition++;
+                    }
+                }
+            }
             return new Automaton(NB_WORD, new_states, NB_STATES + 1, new_transitions, new_transitions.length); // return the new Automaton
         }
+        return this;
     }
 
     public Automaton complement(){
@@ -178,7 +179,6 @@ public class Automaton {
             System.out.println("This automaton is not determinized.");
         else if (!isComplete())
             System.out.println("This automaton is not complete.");
-
         else {
             nb_groups = 0;
             groups = new State[NB_STATES][NB_STATES];
@@ -329,10 +329,44 @@ public class Automaton {
     }
 
     public boolean isDeterminized() {
+        int nb_initials = 0;
+        int[][] nb_transitions = new int[NB_STATES][NB_WORD];
+        for (int i = 0; i < NB_STATES; i++) {
+            if (STATES[i].isINITIAL()) {
+                if (nb_initials > 0)
+                    return false;
+                nb_initials++;
+            }
+            for (int j = 0; j < NB_WORD; j++) {
+                nb_transitions[i][j] = 0;
+                for (int k = 0; k < NB_TRANSITIONS; k++) {
+                    if (TRANSITIONS[k].getSTART() == STATES[i] && TRANSITIONS[k].getWORD() == (char)(97 + j)) {
+                        if (nb_transitions[i][j] > 0)
+                            return false;
+                        nb_transitions[i][j]++;
+                    }
+                }
+            }
+        }
         return true;
     }
 
     public boolean isComplete() {
+        int k;
+        boolean found;
+        for (int i = 0; i < NB_STATES; i++) {
+            for (int j = 0; j < NB_WORD; j++) {
+                k = 0;
+                found = false;
+                while (!found && k < NB_TRANSITIONS) {
+                    if (TRANSITIONS[k].getSTART() == STATES[i] && TRANSITIONS[k].getWORD() == (char)(97 + j))
+                        found = true;
+                    k++;
+                }
+                if (!found)
+                    return false;
+            }
+        }
         return true;
     }
 
@@ -402,7 +436,9 @@ public class Automaton {
         int min_pos;
         String temp;
 
-        if (isSynchronous()) {  // Case where there are no epsilon transitions
+        if (isDeterminized())
+            System.out.println("This automaton is already determinized");
+        else if (isSynchronous()) {  // Case where there are no epsilon transitions
 
             term = false;       // Will determine if the initial state is also final
             for (i = 0; i < NB_STATES; i++) {
@@ -546,8 +582,40 @@ public class Automaton {
             Automaton synchronous_equivalent_at = new Automaton(NB_WORD, new_states, nb_new_states, new_transitions, nb_new_transitions);
             return synchronous_equivalent_at.determinize();
         }
+        return this;
     }
 
+    public boolean testWord(String word) {
+        /*
+        Return true if the automaton recognize the word and false otherwise
+        */
+        for (int i = 0; i < NB_STATES; i++) {
+            if (STATES[i].isINITIAL() && testWordByState(word, STATES[i]))
+                return true;    // recognize the word if at least one of the initial states recognize it
+        }
+        return false;    // If none of the initial states recognize the word then it's not recognized by the automaton
+    }
+
+    private boolean testWordByState(String word, State state) {
+        /*
+        Return true is there is at least path starting from the state 'state' that recognize the word and false otherwise
+        */
+        if (word.isEmpty())   // recognize the word if we reach its end and if the current state is final
+            return state.isFINAL();
+        for (int i = 0; i < NB_TRANSITIONS; i++) {
+            // if there are transitions starting from this state with the fist character of the word, check if at least
+            // one of the end states of those transitions recognize the rest of the word, if yes the word is recognized
+            if (TRANSITIONS[i].getWORD() == word.charAt(0) && TRANSITIONS[i].getSTART() == state)
+                if (testWordByState(word.substring(1), TRANSITIONS[i].getEND()))
+                    return true;
+            // if there are epsilon transitions starting from this state, check if the at least one of the end states
+            // of those transitions recognize the word, if yes the word is recognized
+            if (TRANSITIONS[i].getWORD() == '*' && TRANSITIONS[i].getSTART() == state)
+                if (testWordByState(word, TRANSITIONS[i].getEND()))
+                    return true;
+        }
+        return false; // return false if none of the paths starting from this state recognize the word
+    }
 
     @Override
     public String toString() {
