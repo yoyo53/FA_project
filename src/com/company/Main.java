@@ -2,7 +2,7 @@ package com.company;
 
 public class Main {
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception{
         //Automaton at1 = new Automaton("Test.txt");
         //System.out.println(at1.complete());
         //System.out.println(at1.complete().complement());
@@ -25,6 +25,7 @@ public class Main {
 
     public static boolean testWord(String input, Automaton automaton) {
         char[] word = input.toCharArray();
+        State current_state;
 
         if(automaton == null)
             return false;
@@ -32,12 +33,15 @@ public class Main {
         if(!automaton.isDeterminized()) // we work on determinized automaton to make it simpler
             automaton = automaton.determinize();
 
-        State current_state = getInitial(automaton.getSTATES()); // we start at the first state
+        current_state = getInitial(automaton.getSTATES()); // we start at the first state
+        if (current_state == null)
+            return false;
 
-        for(char w:word)
-            for (Transition tr: automaton.getTRANSITIONS())
-                if(tr.getSTART() == current_state && tr.getWORD() == w)
-                    current_state = tr.getEND();
+        for(char w: word) {
+            current_state = automaton.getTransition(current_state, w);
+            if (current_state == null)
+                return false;
+        }
 
         return current_state.isFINAL();
     }
