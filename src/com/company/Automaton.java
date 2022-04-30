@@ -95,6 +95,7 @@ public class Automaton {
         return TRANSITIONS;
     }
 
+
     public Automaton complete(){
         int i, j;
         boolean[][] state_and_word = new boolean[NB_STATES][NB_WORD]; // each state as a list of boolean that indicates whether the word is used or not, first element is for 'a', last is for 'z'
