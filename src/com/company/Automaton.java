@@ -90,17 +90,17 @@ public class Automaton {
 
 
 
-    public Transition[] addTransition(Transition[] old_tr, State start, char word, State end) {
+    private Transition[] addTransition(Transition[] old_tr, Transition tr) {
         Transition[] new_tr = new Transition[old_tr.length + 1];
         System.arraycopy(old_tr, 0, new_tr, 0, old_tr.length);
-        new_tr[old_tr.length] = new Transition(start, word, end);
+        new_tr[old_tr.length] = tr;
         return new_tr;
     }
 
-    public State[] addState(State[] old_st, State new_state) {
+    private State[] addState(State[] old_st, State state) {
         State[] new_st = new State[old_st.length + 1];
         System.arraycopy(old_st, 0, new_st, 0, old_st.length);
-        new_st[old_st.length] = new_state;
+        new_st[old_st.length] = state;
         return new_st;
     }
 
@@ -112,7 +112,7 @@ public class Automaton {
         return true;
     }
 
-    public String epsilonClosure(State state, String old_closure) {
+    private String epsilonClosure(State state, String old_closure) {
         StringBuilder closure = new StringBuilder();
         closure.append(old_closure);
         String[] state_names;
@@ -187,7 +187,7 @@ public class Automaton {
                             end_tr = new_states[i];
                         i++;
                     }
-                    new_transitions = addTransition(new_transitions, start_tr, tr.getWORD(), end_tr);
+                    new_transitions = addTransition(new_transitions, new Transition(start_tr, tr.getWORD(), end_tr));
                     nb_new_transitions++;
                 }
             }
@@ -219,7 +219,7 @@ public class Automaton {
                                         end_tr = new_states[j];
                                     j++;
                                 }
-                                new_transitions = addTransition(new_transitions, start_tr, tr.getWORD(), end_tr);
+                                new_transitions = addTransition(new_transitions, new Transition(start_tr, tr.getWORD(), end_tr));
                                 nb_new_transitions++;
                             }
                         }
@@ -362,7 +362,7 @@ public class Automaton {
                             nb_new_states++;
                         }
 
-                        new_transitions = addTransition(new_transitions, new_states[i], (char) (97 + j), end_tr);
+                        new_transitions = addTransition(new_transitions, new Transition(new_states[i], (char) (97 + j), end_tr));
                         nb_new_transitions++;
                     }
                 }
@@ -577,7 +577,7 @@ public class Automaton {
         }
     }
 
-    public State getTransition(State state, char word) {
+    private State getTransition(State state, char word) {
         for (Transition tr: TRANSITIONS)
             if (tr.getSTART() == state && tr.getWORD() == word)
                 return tr.getEND();
@@ -753,31 +753,60 @@ public class Automaton {
 
     public Automaton complement() {
         State[] new_states = new State[NB_STATES];
+        Transition[] new_transitions = new Transition[NB_TRANSITIONS];
+        State start_tr, end_tr;
+        int i, j;
 
-        for (int i = 0; i < NB_STATES; i++){
+        for (i = 0; i < NB_STATES; i++){
             new_states[i] = new State(STATES[i].getNAME(), STATES[i].isINITIAL(), !STATES[i].isFINAL());
         }
-        return new Automaton(NB_WORD, new_states, NB_STATES, TRANSITIONS, NB_TRANSITIONS);
+
+        for (i = 0; i < NB_TRANSITIONS; i++) {
+            j = 0;
+            start_tr = null;
+            end_tr = null;
+            while ((start_tr == null || end_tr == null) && j < NB_STATES) {
+                if (TRANSITIONS[i].getSTART().getNAME().equals(new_states[j].getNAME()))
+                    start_tr = new_states[j];
+                if (TRANSITIONS[i].getEND().getNAME().equals(new_states[j].getNAME()))
+                    end_tr = new_states[j];
+                j++;
+            }
+            new_transitions[i] = new Transition(start_tr, TRANSITIONS[i].getWORD(), end_tr);
+        }
+
+        return new Automaton(NB_WORD, new_states, NB_STATES, new_transitions, NB_TRANSITIONS);
     }
 
 
-    private boolean testWordByState(String word, State state) {
+    private boolean testWordByState(String word, State state, Transition[] old_transitions) {
         /*
         Return true is there is at least path starting from the state 'state' that recognize the word and false otherwise
         */
+        int i, j;
+        boolean found;
+
         if (word.isEmpty())   // recognize the word if we reach its end and if the current state is final
             return state.isFINAL();
-        for (int i = 0; i < NB_TRANSITIONS; i++) {
+        for (i = 0; i < NB_TRANSITIONS; i++) {
             // if there are transitions starting from this state with the fist character of the word, check if at least
             // one of the end states of those transitions recognize the rest of the word, if yes the word is recognized
             if (TRANSITIONS[i].getWORD() == word.charAt(0) && TRANSITIONS[i].getSTART() == state)
-                if (testWordByState(word.substring(1), TRANSITIONS[i].getEND()))
+                if (testWordByState(word.substring(1), TRANSITIONS[i].getEND(), addTransition(old_transitions, TRANSITIONS[i])))
                     return true;
             // if there are epsilon transitions starting from this state, check if the at least one of the end states
             // of those transitions recognize the word, if yes the word is recognized
-            if (TRANSITIONS[i].getWORD() == '*' && TRANSITIONS[i].getSTART() == state)
-                if (testWordByState(word, TRANSITIONS[i].getEND()))
+            if (TRANSITIONS[i].getWORD() == '*' && TRANSITIONS[i].getSTART() == state) {
+                j = old_transitions.length - 1;
+                found = false;                   // check if we are not looping on the epsilon transitions
+                while (!found && j >= 0 && old_transitions[j].getWORD() == '*') {
+                    if (TRANSITIONS[i].getEND() == old_transitions[j].getSTART())
+                        found = true;
+                    j--;
+                }
+                if (!found && testWordByState(word, TRANSITIONS[i].getEND(), addTransition(old_transitions, TRANSITIONS[i])))
                     return true;
+            }
         }
         return false; // return false if none of the paths starting from this state recognize the word
     }
@@ -787,7 +816,7 @@ public class Automaton {
         Return true if the automaton recognize the word and false otherwise
         */
         for (int i = 0; i < NB_STATES; i++) {
-            if (STATES[i].isINITIAL() && testWordByState(word, STATES[i]))
+            if (STATES[i].isINITIAL() && testWordByState(word, STATES[i], new Transition[0]))
                 return true;    // recognize the word if at least one of the initial states recognize it
         }
         return false;    // If none of the initial states recognize the word then it's not recognized by the automaton
