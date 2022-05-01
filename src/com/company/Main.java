@@ -2,7 +2,7 @@ package com.company;
 
 public class Main {
 
-    public static void main(String[] args) throws Exception{
+    public static void main(String[] args) {
         Automaton FA = new Automaton("determinize_test.txt");
         Automaton DFA = FA.determinize();
         Automaton CDFA = DFA.complete();

@@ -1,6 +1,7 @@
 package com.company;
-import java.io.FileReader;
-import java.io.BufferedReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 // Object that will represent an automaton
 public class Automaton {
@@ -13,18 +14,28 @@ public class Automaton {
     private final int NB_TRANSITIONS;               // Maximum number of transitions of the automaton
 
 
-    public Automaton(String address_file) throws Exception {
+    public Automaton(String address_file) {
         String[] file = getFile(address_file); // the file is a list of string where each element of the list is a line
+        if (file != null) {
+            NB_WORD = Integer.parseInt(file[0]); //the first line gives the number of possible word
 
-        NB_WORD = Integer.parseInt(file[0]); //the first line gives the number of possible word
+            NB_STATES = Integer.parseInt(file[1]);  // The second (index 1) line of the file contains the number of states, so we take it to initialize MAX_NB_STATES
+            STATES = new State[NB_STATES];
+            setStates(file);
 
-        NB_STATES = Integer.parseInt(file[1]);  // The second (index 1) line of the file contains the number of states, so we take it to initialize MAX_NB_STATES
-        STATES = new State[NB_STATES];
-        setStates(file);
+            NB_TRANSITIONS = Integer.parseInt(file[4]); // The fifth line (index 4) of the file contains the number of transitions, so we take it to initialize MAX_NB_TRANSITIONS
+            TRANSITIONS = new Transition[NB_TRANSITIONS];
+            setTransitions(file);
+        }
+        else {
+            NB_WORD = 0;
 
-        NB_TRANSITIONS = Integer.parseInt(file[4]); // The fifth line (index 4) of the file contains the number of transitions, so we take it to initialize MAX_NB_TRANSITIONS
-        TRANSITIONS = new Transition[NB_TRANSITIONS];
-        setTransitions(file);
+            NB_STATES = 0;
+            STATES = new State[0];
+
+            NB_TRANSITIONS = 0;
+            TRANSITIONS = new Transition[0];
+        }
     }
 
     public Automaton(int nb_word, State[] states, int nb_states, Transition[] transitions, int nb_transitions) {
@@ -35,15 +46,14 @@ public class Automaton {
         NB_TRANSITIONS = nb_transitions;
     }
 
-    private String[] getFile(String address_file) throws Exception {
-        StringBuilder sb = new StringBuilder();
-        String st;
-        BufferedReader br = new BufferedReader(new FileReader(address_file)); //BufferedReader is an optimized way to read the file opened with FileReader
-        while ((st = br.readLine()) != null){
-            sb.append(st);   //append the line
-            sb.append("\n"); // the \n is erased with the readLine, but we need it to split the String in an array of Strings
+    private String[] getFile(String address_file) {
+        try {
+            return Files.readString(Path.of(address_file)).split("\r\n");
         }
-        return sb.toString().split("\n");
+        catch (IOException exception) {
+            System.out.println("Error file not found");
+            return null;
+        }
     }
 
     private void setStates(String[] file) {
