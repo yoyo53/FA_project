@@ -74,10 +74,4 @@ public class Main {
          return true;
     }
 
-    public static void testAutomata(){
-
-
-    }
-
-
 }
