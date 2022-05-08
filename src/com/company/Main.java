@@ -55,21 +55,22 @@ public class Main {
          for(String i: words){
              word_accepted = at.testWord(i);
              if(at.complete().testWord(i) != word_accepted ){
-                 System.out.println("complete failed");
+                 System.out.println("complete failed at word : "+ i);
                  return false;
              }
              if(at.complete().determinize().testWord(i) != word_accepted) {
-                 System.out.println("determinization failed");
+                 System.out.println("determinization failed at word : "+ i);
                  return false;
              }
              if(at.complete().complete().determinize().minimize().testWord(i) != word_accepted) {
-                 System.out.println("minization failed");
+                 System.out.println("minization failed at word : "+ i);
                  return false;
              }
              if(at.complement().testWord(i) == word_accepted) {
-                 System.out.println("completent failed");
+                 System.out.println("completent failed at word : "+ i);
                  return false;
              }
+             System.out.println(i+" : word recongnized ");
          }
          return true;
     }
