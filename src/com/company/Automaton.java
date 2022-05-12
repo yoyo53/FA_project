@@ -160,7 +160,7 @@ public class Automaton {
      *
      * @return An equivalent new synchronous automaton
      */
-
+    // This is the synchronize function
     public Automaton synchronize() {
         Transition[] new_transitions = new Transition[0];       // Will contain the transitions of the new automaton
         State[] new_states = new State[0];                      // Will contain the states of the new automaton
