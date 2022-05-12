@@ -1,7 +1,12 @@
 package com.company;
+import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 // Object that will represent an automaton
 public class Automaton {
@@ -833,6 +838,100 @@ public class Automaton {
                 return true;    // recognize the word if at least one of the initial states recognize it
         }
         return false;    // If none of the initial states recognize the word then it's not recognized by the automaton
+    }
+
+
+    public String saveToString() {
+        int nb_initial = 0, nb_final = 0;
+        int start_tr, end_tr;
+        int i, j;
+        StringBuilder sb = new StringBuilder();
+        sb.append(NB_LETTER);
+        sb.append("\r\n");
+        sb.append(NB_STATES);
+        sb.append("\r\n");
+        for (State state: STATES) {
+            if (state.isINITIAL())
+                nb_initial++;
+        }
+        sb.append(nb_initial);
+        for (i = 0; i < NB_STATES; i++) {
+            if (STATES[i].isINITIAL()) {
+                sb.append(" ");
+                sb.append(i);
+            }
+        }
+        sb.append("\r\n");
+        for (State state: STATES) {
+            if (state.isFINAL())
+                nb_final++;
+        }
+        sb.append(nb_final);
+        for (i = 0; i < NB_STATES; i++) {
+            if (STATES[i].isFINAL()) {
+                sb.append(" ");
+                sb.append(i);
+            }
+        }
+        sb.append("\r\n");
+        sb.append(NB_TRANSITIONS);
+        sb.append("\r\n");
+        for (i = 0; i < NB_TRANSITIONS; i++) {
+            start_tr = -1;
+            end_tr = -1;
+            j = 0;
+            while ((start_tr == -1 && end_tr == -1) || j < NB_STATES) {
+                if (STATES[j] == TRANSITIONS[i].getSTART())
+                    start_tr = j;
+                if (STATES[j] == TRANSITIONS[i].getEND())
+                    end_tr = j;
+                j++;
+            }
+            sb.append(start_tr);
+            sb.append(TRANSITIONS[i].getLETTER());
+            sb.append(end_tr);
+            if (i != NB_TRANSITIONS - 1)
+                sb.append("\r\n");
+        }
+        return sb.toString();
+    }
+
+    public void saveInFile() {
+        JFileChooser fileChooser = new JFileChooser();
+        FileNameExtensionFilter filter;
+        File file, newFile;
+        FileWriter writer;
+        JPanel panel = new JPanel();
+        int save;
+
+        fileChooser.setSelectedFile(new File("automaton.txt"));
+        fileChooser.setCurrentDirectory(new File("automata"));
+        filter = new FileNameExtensionFilter("Text file", "txt");
+        fileChooser.setFileFilter(filter);
+        fileChooser.addChoosableFileFilter(filter);
+        fileChooser.setAcceptAllFileFilterUsed(false);
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+
+        save = fileChooser.showSaveDialog(panel);
+        if (save == JFileChooser.APPROVE_OPTION) {
+            file = fileChooser.getSelectedFile();
+            if (!file.toString().endsWith(".txt")) {
+                newFile = new File(file + ".txt");
+                file.delete();
+                file = newFile;
+            }
+            try {
+                writer = new FileWriter(file);
+                writer.write(saveToString());
+                writer.close();
+            }
+            catch (IOException exception) {
+                System.out.println("error");;
+            }
+        }
+        if (save == JFileChooser.CANCEL_OPTION) {
+            System.out.println("you pressed cancel");
+        }
     }
 
     @Override

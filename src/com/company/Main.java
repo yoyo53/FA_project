@@ -47,7 +47,7 @@ public class Main {
         else
             System.out.println("The word '" + word + "' is not recognized by the automaton");
 
-
+        MCDFA.saveInFile();
     }
 
     private int maxSizeForTableCase(Automaton at){
