@@ -169,12 +169,12 @@ public class Automaton {
                 found;                                          //
         int i, j;                                               // Counters for the different loops
         State start_tr, end_tr;                                 // Will respectively store the start state and end state of the studied transition
-        String[] closure;                                       // Will contain the espilon closures of the different states
+        String[] closure;                                       // Will contain the epsilon closures of the different states
 
         if (isSynchronous())        // Check if the original automaton is not already synchronous
             System.out.println("This automaton is already synchronous");
         else{
-            // This part allows to change, if need be, the initial argument of each state of the original automaton, by studying its epsilon closure
+            // This part allows us to change, if need be, the initial argument of each state of the original automaton, by studying its epsilon closure
             for (State state: STATES) {     // This loop goes through all the states of the original automaton
                 if (state.isINITIAL())
                     initial = true;     // If the state is initial, we don't do anything
@@ -205,9 +205,9 @@ public class Automaton {
                     start_tr = null;
                     end_tr = null;
                     while ((start_tr == null || end_tr == null) && i < nb_new_states) {
-                        if (tr.getSTART().getNAME().equals(new_states[i].getNAME()))    // This condition allows to check if we found the start state or not
+                        if (tr.getSTART().getNAME().equals(new_states[i].getNAME()))    // This condition allows us to check if we found the start state or not
                             start_tr = new_states[i];
-                        if (tr.getEND().getNAME().equals(new_states[i].getNAME()))      // This condition allows to check if we found the final state or not
+                        if (tr.getEND().getNAME().equals(new_states[i].getNAME()))      // This condition allows us to check if we found the final state or not
                             end_tr = new_states[i];
                         i++;
                     }
@@ -257,12 +257,12 @@ public class Automaton {
         return this;
     }
 
+
     /**
      * Check if a given automaton is deterministic or not
      *
      * @return boolean
      */
-
     public boolean isDeterministic() {
         int nb_initials = 0;    // Will keep track of the number of initial states of the automaton
         int[][] nb_transitions = new int[NB_STATES][NB_LETTER];     // Will keep track of the number of transitions of the automaton, and their associated letters
@@ -289,9 +289,9 @@ public class Automaton {
     }
 
     /**
-     * Determinize the automaton and return its determinized version (which is a new automaton)
+     * Determinize the automaton and return its deterministic version (which is a new automaton)
      *
-     * @return Determinized automaton
+     * @return deterministic equivalent of the automaton
 
     * */
     public Automaton determinize() {
@@ -311,20 +311,20 @@ public class Automaton {
             System.out.println("This automaton is already deterministic.");
         else if (isSynchronous()) {  // Case where there are no epsilon transitions
 
-            // This part allows to construct the composed initial state of the determinized automaton
+            // This part allows to construct the composed initial state of the deterministic automaton
             term = false;       // Will determine if the initial state is also final
             for (i = 0; i < NB_STATES; i++) {
                 if (STATES[i].isINITIAL()) {
                     if (state_name.length() != 0)
                         state_name.append('.');
                     state_name.append(STATES[i].getNAME());
-                    if (STATES[i].isFINAL())     // If one of the original automaton's initial states is also final, then the composed initial state of the determinized automaton will also be final
+                    if (STATES[i].isFINAL())     // If one of the original automaton's initial states is also final, then the composed initial state of the deterministic automaton will also be final
                         term = true;
                 }
             }
 
             // This part allows to reorder the states composing the composed initial state in the ascending order
-            current_state_names = state_name.toString().split("\\.");   // Contains a list of characters, corresponding to the states composing the initial state of the determinized automaton
+            current_state_names = state_name.toString().split("\\.");   // Contains a list of characters, corresponding to the states composing the initial state of the deterministic automaton
             for (i = 0; i < current_state_names.length; i++) {
                 min_pos = i;
                 for (j = i + 1; j < current_state_names.length; j++) {  // Search for the current minimum value in the list
@@ -344,7 +344,7 @@ public class Automaton {
 
 
             i = 0;
-            while (i < nb_new_states) { // This loop will run until we are sure there are no new states to add to the determinized automaton
+            while (i < nb_new_states) { // This loop will run until we are sure there are no new states to add to the deterministic automaton
                 current_state_names = new_states[i].getNAME().split("\\.");         // We put the names of the states composing the last state we added in the new_state list, so that we can find its associated transitions
                 for (j = 0; j < NB_LETTER; j++) {   // This loop will get through all the letters of the alphabet of the original automaton, to find all the transitions of the current new state
                     term = false;  // Determine if the end state of the transition is terminal or not
@@ -409,7 +409,7 @@ public class Automaton {
                 }
                 i++;
             }
-            return new Automaton(NB_LETTER, new_states, nb_new_states, new_transitions, nb_new_transitions);    // This line will instantiate and return the determinized version of the original automaton
+            return new Automaton(NB_LETTER, new_states, nb_new_states, new_transitions, nb_new_transitions);    // This line will instantiate and return the deterministic version of the original automaton
         }
 
         else{
@@ -822,7 +822,7 @@ public class Automaton {
     public String[][] toTable(){
         String[][] table;
         int width = NB_LETTER+1; //The width should be the number of possible input plus a column on the left(states) for the margin
-        int height = NB_STATES+1 ; //The lenght should be the number of states plus a row on top(inputs) for the margin
+        int height = NB_STATES+1 ; //The length should be the number of states plus a row on top(inputs) for the margin
         int i,j; // index
         StringBuilder transition = new StringBuilder();
 
