@@ -61,9 +61,6 @@ public class Automaton {
         }
     }
 
-    public State[] getSTATES() {
-        return STATES;
-    }
 
     private void setStates(String[] file) {
         boolean is_initial, is_final;
@@ -829,6 +826,7 @@ public class Automaton {
         return false; // return false if none of the paths starting from this state recognize the word
     }
 
+
     public boolean testWord(String word) {
         /*
         Return true if the automaton recognize the word and false otherwise
@@ -839,6 +837,7 @@ public class Automaton {
         }
         return false;    // If none of the initial states recognize the word then it's not recognized by the automaton
     }
+
 
 
     public String saveToString() {
@@ -924,14 +923,51 @@ public class Automaton {
                 writer = new FileWriter(file);
                 writer.write(saveToString());
                 writer.close();
-            }
-            catch (IOException exception) {
-                System.out.println("error");;
+            } catch (IOException exception) {
+                System.out.println("error");
+
             }
         }
         if (save == JFileChooser.CANCEL_OPTION) {
             System.out.println("you pressed cancel");
         }
+    }
+
+    public String[][] toTable(){
+        String[][] table;
+        int width = NB_LETTER+1; //The width should be the number of possible input plus a column on the left(states) for the margin
+        int height = NB_STATES+1 ; //The lenght should be the number of states plus a row on top(inputs) for the margin
+        int i,j; // index
+        StringBuilder transition = new StringBuilder();
+
+        table = new String[height][width];
+
+        table[0][0] = " ";// top left corner empty
+        for(i = 1; i < width; i++)
+            table[0][i] = (char) (97 + i - 1) +"|";// 97 is the ascii code for "a" and we already set up the first one, so we start at one and take one out for the ascii code
+        for(i = 1; i < height; i++)
+            table[i][0] = i - 1 +"|";
+
+        for(i = 1; i < NB_LETTER+1; i++){
+
+            for(j = 1; j < NB_STATES+1; j++){
+                transition.setLength(0); // clear the StringBuilder
+                for(Transition tr : TRANSITIONS){
+                    if(tr.getLETTER() == (char) (97+i-1) && tr.getSTART() == STATES[j-1]) { // if the input and the initial state are the same as the one in the transition
+                        if(transition.length() > 0) // if there is already one state for the transition, put a separator
+                            transition.append(",");
+                        transition.append(tr.getEND().getNAME());
+                    }
+                }
+                if(transition.length() == 0)// if null put a separator
+                    transition.append(" ");
+                transition.append("|");
+                table[j][i] = transition.toString(); // enter the transition in the table
+            }
+
+        }
+        return table;
+
     }
 
     @Override

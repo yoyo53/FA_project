@@ -3,7 +3,8 @@ package com.company;
 public class Main {
 
     public static void main(String[] args) {
-        Automaton FA = new Automaton("automata/automata_35.txt");
+        Automaton FA = new Automaton("automata/automaton_22.txt");
+
         Automaton DFA = FA.determinize();
         Automaton CDFA = DFA.complete();
         Automaton MCDFA = CDFA.minimize();
@@ -48,17 +49,10 @@ public class Main {
             System.out.println("The word '" + word + "' is not recognized by the automaton");
 
         MCDFA.saveInFile();
+
     }
 
-    private int maxSizeForTableCase(Automaton at){
-        int max_size=0;
 
-        if(at != null){
-            at.getSTATES();
-        }
-
-        return max_size;
-    }
 
 
 }
