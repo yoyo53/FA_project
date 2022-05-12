@@ -3,7 +3,8 @@ package com.company;
 public class Main {
 
     public static void main(String[] args) {
-        Automaton FA = new Automaton("automata/automaton_10.txt");
+        Automaton FA = new Automaton("automata/automaton_22.txt");
+
         Automaton DFA = FA.determinize();
         Automaton CDFA = DFA.complete();
         Automaton MCDFA = CDFA.minimize();
@@ -46,5 +47,12 @@ public class Main {
             System.out.println("The word '" + word + "' is recognized by the automaton.");
         else
             System.out.println("The word '" + word + "' is not recognized by the automaton");
+
+        MCDFA.saveInFile();
+
     }
+
+
+
+
 }

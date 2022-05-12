@@ -1,17 +1,21 @@
 package com.company;
+import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 // Object that will represent an automaton
 public class Automaton {
-    private final int NB_LETTER;
+    private final int NB_LETTER;                    // number of letters composing of the automaton
 
     private final State[] STATES;                             // List of states of the automaton
-    private final int NB_STATES;                    // Maximum number of states of the automaton
+    private final int NB_STATES;                    // Number of states of the automaton
 
     private final Transition[] TRANSITIONS;                   // List of transitions of the automaton
-    private final int NB_TRANSITIONS;               // Maximum number of transitions of the automaton
+    private final int NB_TRANSITIONS;               // Number of transitions of the automaton
 
 
     public Automaton(String address_file) {
@@ -54,6 +58,10 @@ public class Automaton {
             System.out.println("Error file not found");
             return null;
         }
+    }
+
+    public State[] getSTATES() {
+        return STATES;
     }
 
     private void setStates(String[] file) {
@@ -811,6 +819,42 @@ public class Automaton {
         return new Automaton(NB_LETTER, new_states, NB_STATES, new_transitions, NB_TRANSITIONS);
     }
 
+    public String[][] toTable(){
+        String[][] table;
+        int width = NB_LETTER+1; //The width should be the number of possible input plus a column on the left(states) for the margin
+        int height = NB_STATES+1 ; //The lenght should be the number of states plus a row on top(inputs) for the margin
+        int i,j; // index
+        StringBuilder transition = new StringBuilder();
+
+        table = new String[height][width];
+
+        table[0][0] = " ";// top left corner empty
+        for(i = 1; i < width; i++)
+            table[0][i] = (char) (97 + i - 1)+"|";// 97 is the ascii code for "a" and we already set up the first one, so we start at one and take one out for the ascii code
+        for(i = 1; i < height; i++)
+            table[i][0] = i-1+"|";
+
+        for(i = 1; i < NB_LETTER+1; i++){
+
+            for(j = 1; j < NB_STATES+1; j++){
+                transition.setLength(0); // clear the StringBuilder
+                for(Transition tr : TRANSITIONS){
+                    if(tr.getLETTER() == (char) (97+i-1) && tr.getSTART() == STATES[j-1]) { // if the input and the initial state are the same as the one in the transition
+                        if(transition.length() > 0) // if there is already one state for the transition, put a separator
+                            transition.append(",");
+                        transition.append(tr.getEND().getNAME());
+                    }
+                }
+                if(transition.length() == 0)// if null put a separator
+                    transition.append(" ");
+                transition.append("|");
+                table[j][i] = transition.toString(); // enter the transition in the table
+            }
+
+        }
+        return table;
+
+    }
 
     private boolean testWordByState(String word, State state, Transition[] old_transitions) {
         /*
@@ -854,6 +898,101 @@ public class Automaton {
         }
         return false;    // If none of the initial states recognize the word then it's not recognized by the automaton
     }
+
+
+    public String saveToString() {
+        int nb_initial = 0, nb_final = 0;
+        int start_tr, end_tr;
+        int i, j;
+        StringBuilder sb = new StringBuilder();
+        sb.append(NB_LETTER);
+        sb.append("\r\n");
+        sb.append(NB_STATES);
+        sb.append("\r\n");
+        for (State state: STATES) {
+            if (state.isINITIAL())
+                nb_initial++;
+        }
+        sb.append(nb_initial);
+        for (i = 0; i < NB_STATES; i++) {
+            if (STATES[i].isINITIAL()) {
+                sb.append(" ");
+                sb.append(i);
+            }
+        }
+        sb.append("\r\n");
+        for (State state: STATES) {
+            if (state.isFINAL())
+                nb_final++;
+        }
+        sb.append(nb_final);
+        for (i = 0; i < NB_STATES; i++) {
+            if (STATES[i].isFINAL()) {
+                sb.append(" ");
+                sb.append(i);
+            }
+        }
+        sb.append("\r\n");
+        sb.append(NB_TRANSITIONS);
+        sb.append("\r\n");
+        for (i = 0; i < NB_TRANSITIONS; i++) {
+            start_tr = -1;
+            end_tr = -1;
+            j = 0;
+            while ((start_tr == -1 && end_tr == -1) || j < NB_STATES) {
+                if (STATES[j] == TRANSITIONS[i].getSTART())
+                    start_tr = j;
+                if (STATES[j] == TRANSITIONS[i].getEND())
+                    end_tr = j;
+                j++;
+            }
+            sb.append(start_tr);
+            sb.append(TRANSITIONS[i].getLETTER());
+            sb.append(end_tr);
+            if (i != NB_TRANSITIONS - 1)
+                sb.append("\r\n");
+        }
+        return sb.toString();
+    }
+
+    public void saveInFile() {
+        JFileChooser fileChooser = new JFileChooser();
+        FileNameExtensionFilter filter;
+        File file, newFile;
+        FileWriter writer;
+        JPanel panel = new JPanel();
+        int save;
+
+        fileChooser.setSelectedFile(new File("automaton.txt"));
+        fileChooser.setCurrentDirectory(new File("automata"));
+        filter = new FileNameExtensionFilter("Text file", "txt");
+        fileChooser.setFileFilter(filter);
+        fileChooser.addChoosableFileFilter(filter);
+        fileChooser.setAcceptAllFileFilterUsed(false);
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+
+        save = fileChooser.showSaveDialog(panel);
+        if (save == JFileChooser.APPROVE_OPTION) {
+            file = fileChooser.getSelectedFile();
+            if (!file.toString().endsWith(".txt")) {
+                newFile = new File(file + ".txt");
+                file.delete();
+                file = newFile;
+            }
+            try {
+                writer = new FileWriter(file);
+                writer.write(saveToString());
+                writer.close();
+            }
+            catch (IOException exception) {
+                System.out.println("error");
+            }
+        }
+        if (save == JFileChooser.CANCEL_OPTION) {
+            System.out.println("you pressed cancel");
+        }
+    }
+
 
     @Override
     public String toString() {
