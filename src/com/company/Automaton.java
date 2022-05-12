@@ -1,5 +1,7 @@
 package com.company;
-import javax.swing.*;
+
+import javax.swing.JFileChooser;
+import javax.swing.JPanel;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.File;
 import java.io.FileWriter;
@@ -7,19 +9,41 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-// Object that will represent an automaton
+/**
+ * Object that represents an automaton
+ */
 public class Automaton {
-    private final int NB_LETTER;                    // number of letters composing of the automaton
+    /**
+     * Number of letters composing the alphabet of the automaton
+     * */
+    private final int NB_LETTER;
 
-    private final State[] STATES;                             // List of states of the automaton
-    private final int NB_STATES;                    // Number of states of the automaton
+    /**
+     * List of states of the automaton
+     * */
+    private final State[] STATES;
+    /**
+     * Number of states of the automaton
+     * */
+    private final int NB_STATES;
 
-    private final Transition[] TRANSITIONS;                   // List of transitions of the automaton
-    private final int NB_TRANSITIONS;               // Number of transitions of the automaton
+    /**
+     * List of transitions of the automaton
+     * */
+    private final Transition[] TRANSITIONS;
+    /**
+     * Number of transitions of the automaton
+     * */
+    private final int NB_TRANSITIONS;
 
 
-    public Automaton(String address_file) {
-        String[] file = getFile(address_file); // the file is a list of string where each element of the list is a line
+    /**
+     * Initialize an Automaton object from a text file
+     *
+     * @param filepath The path of the text file containing the automaton
+     * */
+    public Automaton(String filepath) {
+        String[] file = getFileContent(filepath); // the file is a list of string where each element of the list is a line
         if (file != null) {
             NB_LETTER = Integer.parseInt(file[0]); //the first line gives the number of possible letters in the alphabet
 
@@ -42,6 +66,15 @@ public class Automaton {
         }
     }
 
+    /**
+     * Initialize an Automaton object from all its attributes
+     *
+     * @param nb_letter The number of letters composing the alphabet of the automaton
+     * @param states The list of states of the automaton
+     * @param nb_states The number of states of the automaton
+     * @param transitions The list of transitions of the automaton
+     * @param nb_transitions The number of transitions of the automaton
+     * */
     public Automaton(int nb_letter, State[] states, int nb_states, Transition[] transitions, int nb_transitions) {
         NB_LETTER = nb_letter;
         STATES = states;
@@ -50,9 +83,16 @@ public class Automaton {
         NB_TRANSITIONS = nb_transitions;
     }
 
-    private String[] getFile(String address_file) {
+    /**
+     * Get the whole content of the file passed as parameter
+     *
+     * @param filepath The path of the file
+     *
+     * @return a string containing all the content of the file
+     * */
+    private String[] getFileContent(String filepath) {
         try {
-            return Files.readString(Path.of(address_file)).split("\r\n");
+            return Files.readString(Path.of(filepath)).split("\r\n");
         }
         catch (IOException exception) {
             System.out.println("Error file not found");
@@ -64,6 +104,11 @@ public class Automaton {
         return STATES;
     }
 
+    /**
+     * Initialize the list of states of the automaton from the file
+     *
+     * @param file The file containing the automaton as a list of string (each element of the list is one line)
+     * */
     private void setStates(String[] file) {
         boolean is_initial, is_final;
         String name;
@@ -87,13 +132,25 @@ public class Automaton {
         }
     }
 
-    private State getStateFromName(String str) {
+    /**
+     * Find a state of the automaton by its name
+     *
+     * @param name The name of the researched state
+     *
+     * @return the state that have the desired name
+     * */
+    private State getStateFromName(String name) {
         for (State state: STATES)
-            if (str.equals(state.getNAME()))
+            if (name.equals(state.getNAME()))
                 return state;
         return null;
     }
 
+    /**
+     * Initialize the list of transitions of the automaton from the file
+     *
+     * @param file The file containing the automaton as a list of string (each element of the list is one line)
+     * */
     private void setTransitions(String[] file) {
         State start, end;
         char letter;
@@ -107,6 +164,14 @@ public class Automaton {
     }
 
 
+    /**
+     * Add a transition to a list of transitions
+     *
+     * @param old_tr The old list of transitions
+     * @param tr The transition to add to the list
+     *
+     * @return a new list of transitions containing all the elements of the old list and the new transition
+     * */
     private Transition[] addTransition(Transition[] old_tr, Transition tr) {
         Transition[] new_tr = new Transition[old_tr.length + 1];
         System.arraycopy(old_tr, 0, new_tr, 0, old_tr.length);
@@ -114,14 +179,27 @@ public class Automaton {
         return new_tr;
     }
 
-    private State[] addState(State[] old_st, State state) {
-        State[] new_st = new State[old_st.length + 1];
-        System.arraycopy(old_st, 0, new_st, 0, old_st.length);
-        new_st[old_st.length] = state;
+    /**
+     * Add a state to a list of states
+     *
+     * @param old_states The old list of states
+     * @param state The state to add to the list
+     *
+     * @return a new list of states containing all the elements of the old list and the new state
+     * */
+    private State[] addState(State[] old_states, State state) {
+        State[] new_st = new State[old_states.length + 1];
+        System.arraycopy(old_states, 0, new_st, 0, old_states.length);
+        new_st[old_states.length] = state;
         return new_st;
     }
 
 
+    /**
+     * Check if the automaton is synchronous or not
+     *
+     * @return true if the automaton is synchronous and false otherwise
+     */
     public boolean isSynchronous() {          // Allows us to check if a given automaton is synchronous or not
         for(Transition tr: TRANSITIONS)
             if (tr.getLETTER() == '*')
@@ -129,9 +207,16 @@ public class Automaton {
         return true;
     }
 
+    /**
+     * Get the epsilon closure of a state recursively
+     *
+     * @param state The state to analyse
+     * @param old_closure The names of the states that are already in the closure
+     *
+     * @return a string containing all the states in the epsilon closure of this state
+     */
     private String epsilonClosure(State state, String old_closure) {
-        StringBuilder closure = new StringBuilder();
-        closure.append(old_closure);
+        StringBuilder closure = new StringBuilder(old_closure);
         String[] state_names;
         boolean found;
         int i;
@@ -289,11 +374,10 @@ public class Automaton {
     }
 
     /**
-     * Determinize the automaton and return its deterministic version (which is a new automaton)
+     * Determinize the automaton
      *
-     * @return deterministic equivalent of the automaton
-
-    * */
+     * @return a deterministic equivalent of the automaton
+     * */
     public Automaton determinize() {
         Transition[] new_transitions = new Transition[0];       // Will contain the transitions of the new automaton
         State[] new_states = new State[0];                      // Will contain the states of the new automaton
@@ -420,6 +504,11 @@ public class Automaton {
     }
 
 
+    /**
+     * Check if the automaton is complete or not
+     *
+     * @return true if the automaton is complete and false otherwise
+     */
     public boolean isComplete() {
         int k;
         boolean found;
@@ -493,6 +582,11 @@ public class Automaton {
     }
 
 
+    /**
+     * Check if the automaton is minimized or not
+     *
+     * @return true if the automaton is minimized and false otherwise
+     */
     public boolean isMinimized() {
         State[][] groups, groups_temp;
         String[] groups_name, groups_name_temp;
@@ -618,6 +712,14 @@ public class Automaton {
         }
     }
 
+    /**
+     * Find the end state of the transition starting from a specific state and with a specific letter
+     *
+     * @param state The start state of the transition
+     * @param letter The letter of the transition
+     *
+     * @return the end state of the transition
+     */
     private State getTransition(State state, char letter) {
         for (Transition tr: TRANSITIONS)
             if (tr.getSTART() == state && tr.getLETTER() == letter)
@@ -625,6 +727,11 @@ public class Automaton {
         return null;
     }
 
+    /**
+     * Minimize the automaton if it is complete deterministic
+     *
+     * @return a minimal equivalent of the automaton
+     * */
     public Automaton minimize() {
         State[][] groups, groups_temp;
         String[] groups_name, groups_name_temp;
@@ -792,33 +899,50 @@ public class Automaton {
     }
 
 
+    /**
+     * Make the complement of the automaton if it is complete deterministic
+     *
+     * @return the complement of the automaton
+     */
     public Automaton complement() {
         State[] new_states = new State[NB_STATES];
         Transition[] new_transitions = new Transition[NB_TRANSITIONS];
         State start_tr, end_tr;
         int i, j;
 
-        for (i = 0; i < NB_STATES; i++){
-            new_states[i] = new State(STATES[i].getNAME(), STATES[i].isINITIAL(), !STATES[i].isFINAL());
-        }
-
-        for (i = 0; i < NB_TRANSITIONS; i++) {
-            j = 0;
-            start_tr = null;
-            end_tr = null;
-            while ((start_tr == null || end_tr == null) && j < NB_STATES) {
-                if (TRANSITIONS[i].getSTART().getNAME().equals(new_states[j].getNAME()))
-                    start_tr = new_states[j];
-                if (TRANSITIONS[i].getEND().getNAME().equals(new_states[j].getNAME()))
-                    end_tr = new_states[j];
-                j++;
+        if (!isDeterministic())
+            System.out.println("This automaton is not deterministic.");
+        else if (!isComplete())
+            System.out.println("This automaton is not complete.");
+        else {
+            for (i = 0; i < NB_STATES; i++) {
+                new_states[i] = new State(STATES[i].getNAME(), STATES[i].isINITIAL(), !STATES[i].isFINAL());
             }
-            new_transitions[i] = new Transition(start_tr, TRANSITIONS[i].getLETTER(), end_tr);
-        }
 
-        return new Automaton(NB_LETTER, new_states, NB_STATES, new_transitions, NB_TRANSITIONS);
+            for (i = 0; i < NB_TRANSITIONS; i++) {
+                j = 0;
+                start_tr = null;
+                end_tr = null;
+                while ((start_tr == null || end_tr == null) && j < NB_STATES) {
+                    if (TRANSITIONS[i].getSTART().getNAME().equals(new_states[j].getNAME()))
+                        start_tr = new_states[j];
+                    if (TRANSITIONS[i].getEND().getNAME().equals(new_states[j].getNAME()))
+                        end_tr = new_states[j];
+                    j++;
+                }
+                new_transitions[i] = new Transition(start_tr, TRANSITIONS[i].getLETTER(), end_tr);
+            }
+
+            return new Automaton(NB_LETTER, new_states, NB_STATES, new_transitions, NB_TRANSITIONS);
+        }
+        return this;
     }
 
+    /**
+     * Create a table representing the transitions of the automaton
+     *
+     * @return the 2D list of strings that represents the transitions of the automaton
+     */
     public String[][] toTable(){
         String[][] table;
         int width = NB_LETTER+1; //The width should be the number of possible input plus a column on the left(states) for the margin
@@ -856,10 +980,18 @@ public class Automaton {
 
     }
 
+
+    /**
+     * Check recursively if there is at least one path starting from the current state that recognize the
+     * word passed as argument
+     *
+     * @param word The word to be tested
+     * @param state The current state
+     * @param old_transitions The path used to arrive to this state
+     *
+     * @return true is there is at least path starting from the state that recognize the word and false otherwise
+     */
     private boolean testWordByState(String word, State state, Transition[] old_transitions) {
-        /*
-        Return true is there is at least path starting from the state 'state' that recognize the word and false otherwise
-        */
         int i, j;
         boolean found;
 
@@ -888,10 +1020,14 @@ public class Automaton {
         return false; // return false if none of the paths starting from this state recognize the word
     }
 
+    /**
+     * Check if the automaton recognize the word passed as argument
+     *
+     * @param word The word to be tested
+     *
+     * @return true if the automaton recognize the word and false otherwise
+     */
     public boolean testWord(String word) {
-        /*
-        Return true if the automaton recognize the word and false otherwise
-        */
         for (int i = 0; i < NB_STATES; i++) {
             if (STATES[i].isINITIAL() && testWordByState(word, STATES[i], new Transition[0]))
                 return true;    // recognize the word if at least one of the initial states recognize it
@@ -900,6 +1036,11 @@ public class Automaton {
     }
 
 
+    /**
+     * Save the automaton in a string using the same format as the text files
+     *
+     * @return a string containing all the information about the automaton with the format of the text files
+     */
     public String saveToString() {
         int nb_initial = 0, nb_final = 0;
         int start_tr, end_tr;
@@ -955,6 +1096,9 @@ public class Automaton {
         return sb.toString();
     }
 
+    /**
+     * Save the automaton in a text file at the location chosen by the user
+     */
     public void saveInFile() {
         JFileChooser fileChooser = new JFileChooser();
         FileNameExtensionFilter filter;
@@ -993,11 +1137,20 @@ public class Automaton {
         }
     }
 
-
+    /**
+     * Returns a string representing the automaton.
+     *
+     * @return a string containing the description of the automaton. This description is composed of:<br>
+     * - the number of letters in the alphabet of the automaton<br>
+     * - the number and the list of states<br>
+     * - the number and the list of transitions<br>
+     * */
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Automata:\n");
+        sb.append(NB_LETTER);
+        sb.append(" letters in the alphabet.\n");
         sb.append(NB_STATES);
         sb.append(" states:\n");
         for (State state: STATES) {
