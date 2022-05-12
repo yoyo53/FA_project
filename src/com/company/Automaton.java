@@ -147,31 +147,38 @@ public class Automaton {
         return closure.toString();
     }
 
-    public Automaton synchronize() {
-        Transition[] new_transitions = new Transition[0];
-        State[] new_states = new State[0];
-        int nb_new_transitions = 0, nb_new_states = 0;
-        boolean initial, found;
-        int i, j;
-        State start_tr, end_tr;
-        String[] closure;
+    /**
+     * Allows to get the synchronous version of a given asynchronous automaton
+     *
+     * @return An equivalent new synchronous automaton
+     */
 
-        if (isSynchronous())
+    public Automaton synchronize() {
+        Transition[] new_transitions = new Transition[0];       // Will contain the transitions of the new automaton
+        State[] new_states = new State[0];                      // Will contain the states of the new automaton
+        int nb_new_transitions = 0, nb_new_states = 0;          // Allow respectively to keep track of the number of new transitions and states
+        boolean initial,                                        //
+                found;                                          //
+        int i, j;                                               // Counters for the different loops
+        State start_tr, end_tr;                                 // Will respectively store the start state and end state of the studied transition
+        String[] closure;                                       // Will contain the espilon closures of the different states
+
+        if (isSynchronous())        // Check if the original automaton is not already synchronous
             System.out.println("This automaton is already synchronous");
-        else{                   // Case where there are epsilon transitions
-            // Adjust the initial states
-            for (State state: STATES) {
+        else{
+            // This part allows to change, if need be, the initial argument of each state of the original automaton, by studying its epsilon closure
+            for (State state: STATES) {     // This loop goes through all the states of the original automaton
                 if (state.isINITIAL())
-                    initial = true;
-                else {
+                    initial = true;     // If the state is initial, we don't do anything
+                else {  // If the state is not initial, we should check if it is contained in the epsilon closure of an initial state
                     i = 0;
                     initial = false;
-                    while (!initial && i < NB_STATES) {
-                        if(STATES[i].isINITIAL()) {
+                    while (!initial && i < NB_STATES) { // This loop will go through all the list of states, unless initial change to true
+                        if(STATES[i].isINITIAL()) { // If we find an initial state, we will compute its epsilon closure
                             closure = epsilonClosure(STATES[i], "").split("\\.");
                             j = 0;
-                            while (!initial && j < closure.length) {
-                                if (state.getNAME().equals(closure[j]))
+                            while (!initial && j < closure.length) { // This loop will go through all the states contained in the epsilon closure, unless initial change to true
+                                if (state.getNAME().equals(closure[j])) // if we find the state we are studying in the epsilon closure of one initial state, we change initial to true
                                     initial = true;
                                 j++;
                             }
@@ -179,30 +186,30 @@ public class Automaton {
                         i++;
                     }
                 }
-                new_states = addState(new_states, new State(state.getNAME(), initial, state.isFINAL()));
-                nb_new_states++;
+                new_states = addState(new_states, new State(state.getNAME(), initial, state.isFINAL()));    // We add the studied state to the list new_states
+                nb_new_states++;    // We increment the number of new states
             }
 
-            // Keep only useful transitions
-            for (Transition tr: TRANSITIONS) {
-                if (tr.getLETTER() != '*') {
-                    i = 0;
+            // Now, we want to add in the list new_transitions only the useful transitions for the synchronous automaton
+            for (Transition tr: TRANSITIONS) {  // We go through the list of all transitions
+                if (tr.getLETTER() != '*') {    // We check if the studied transition is an epsilon transition or not
+                    i = 0;  // If it is not the case, we won't need to modify it, so we should find its start and end state in the list new_states, and add it to the list new_transitions
                     start_tr = null;
                     end_tr = null;
                     while ((start_tr == null || end_tr == null) && i < nb_new_states) {
-                        if (tr.getSTART().getNAME().equals(new_states[i].getNAME()))
+                        if (tr.getSTART().getNAME().equals(new_states[i].getNAME()))    // This condition allows to check if we found the start state or not
                             start_tr = new_states[i];
-                        if (tr.getEND().getNAME().equals(new_states[i].getNAME()))
+                        if (tr.getEND().getNAME().equals(new_states[i].getNAME()))      // This condition allows to check if we found the final state or not
                             end_tr = new_states[i];
                         i++;
                     }
-                    new_transitions = addTransition(new_transitions, new Transition(start_tr, tr.getLETTER(), end_tr));
-                    nb_new_transitions++;
+                    new_transitions = addTransition(new_transitions, new Transition(start_tr, tr.getLETTER(), end_tr));     // We add the non-epsilon transition to the list new_transitions
+                    nb_new_transitions++;   // We increment the number of new transitions
                 }
             }
 
-            // replace the epsilon transitions
-            for (i = 0; i < nb_new_states; i++) {
+            // Now we want to replace the epsilon transitions
+            for (i = 0; i < nb_new_states; i++) {   //
                 closure = epsilonClosure(STATES[i], "").split("\\.");
                 for (Transition tr: TRANSITIONS) {
                     if (tr.getEND().getNAME().equals(new_states[i].getNAME()) && tr.getLETTER() != '*') {
@@ -242,39 +249,51 @@ public class Automaton {
         return this;
     }
 
+    /**
+     * Check if a given automaton is deterministic or not
+     *
+     * @return boolean
+     */
 
     public boolean isDeterministic() {
-        int nb_initials = 0;
-        int[][] nb_transitions = new int[NB_STATES][NB_LETTER];
-        if (!isSynchronous())
+        int nb_initials = 0;    // Will keep track of the number of initial states of the automaton
+        int[][] nb_transitions = new int[NB_STATES][NB_LETTER];     // Will keep track of the number of transitions of the automaton, and their associated letters
+        if (!isSynchronous())   // If the automaton is asynchronous, it cannot be deterministic, so we return false
             return false;
-        for (int i = 0; i < NB_STATES; i++) {
-            if (STATES[i].isINITIAL()) {
-                if (nb_initials > 0)
-                    return false;
-                nb_initials++;
+        for (int i = 0; i < NB_STATES; i++) {   // We will go through all the states of the automaton
+            if (STATES[i].isINITIAL()) {    // Check if the state is initial
+                if (nb_initials > 0)    // Check if nb_initials is strictly higher than 0 or not
+                    return false;   // If it is the case, it means there are multiple initial states and so, we return false
+                nb_initials++;  // If it is not the case, we increment nb_initials
             }
-            for (int j = 0; j < NB_LETTER; j++) {
-                nb_transitions[i][j] = 0;
-                for (int k = 0; k < NB_TRANSITIONS; k++) {
-                    if (TRANSITIONS[k].getSTART() == STATES[i] && TRANSITIONS[k].getLETTER() == (char)(97 + j)) {
-                        if (nb_transitions[i][j] > 0)
-                            return false;
-                        nb_transitions[i][j]++;
+            for (int j = 0; j < NB_LETTER; j++) {   // We will go through all the letters of the alphabet of the original automaton
+                nb_transitions[i][j] = 0;       // We set all values of the list to 0
+                for (int k = 0; k < NB_TRANSITIONS; k++) {  // We go through all the transitions of the automaton
+                    if (TRANSITIONS[k].getSTART() == STATES[i] && TRANSITIONS[k].getLETTER() == (char)(97 + j)) {   // We check if the start state of the studied transition equals the studied state
+                        if (nb_transitions[i][j] > 0)   // If it is the case, we check if we already encountered such transition
+                            return false;   // If it is the case, it means that there are multiple paths with the same letter from the same state so, we return false
+                        nb_transitions[i][j]++;     // If it is not the case, we increment nb_transitions[i][j]
                     }
                 }
             }
         }
-        return true;
+        return true; // All the tests were validated, so we return true
     }
 
+    /**
+     * Determinize the automaton and return its determinized version (which is a new automaton)
+     *
+     * @return Determinized automaton
+
+    * */
     public Automaton determinize() {
-        Transition[] new_transitions = new Transition[0];
-        State[] new_states = new State[0];
-        int nb_new_transitions = 0, nb_new_states = 0;
-        StringBuilder state_name = new StringBuilder();         // Will contain the name of the states
-        boolean term, found;
-        int i, j, k, l, m;
+        Transition[] new_transitions = new Transition[0];       // Will contain the transitions of the new automaton
+        State[] new_states = new State[0];                      // Will contain the states of the new automaton
+        int nb_new_transitions = 0, nb_new_states = 0;          // Allow respectively to keep track of the number of new transitions and states
+        StringBuilder state_name = new StringBuilder();         // Will contain the names of the states
+        boolean term,                                           // term will be used to determine if an initial state is also final
+                found;                                          // found will allow to check a condition that will be detailed later
+        int i, j, k, l, m;                                      // Counters for the different loops
         State end_tr;
         String[] current_state_names, next_state_names;
         int min_pos;
@@ -284,25 +303,27 @@ public class Automaton {
             System.out.println("This automaton is already deterministic.");
         else if (isSynchronous()) {  // Case where there are no epsilon transitions
 
+            // This part allows to construct the composed initial state of the determinized automaton
             term = false;       // Will determine if the initial state is also final
             for (i = 0; i < NB_STATES; i++) {
                 if (STATES[i].isINITIAL()) {
                     if (state_name.length() != 0)
                         state_name.append('.');
                     state_name.append(STATES[i].getNAME());
-                    if (STATES[i].isFINAL())     // If one of the original automaton's initial new_states is also final, then the composed initial state will also be final
+                    if (STATES[i].isFINAL())     // If one of the original automaton's initial states is also final, then the composed initial state of the determinized automaton will also be final
                         term = true;
                 }
             }
 
-            current_state_names = state_name.toString().split("\\.");
+            // This part allows to reorder the states composing the composed initial state in the ascending order
+            current_state_names = state_name.toString().split("\\.");   // Contains a list of characters, corresponding to the states composing the initial state of the determinized automaton
             for (i = 0; i < current_state_names.length; i++) {
                 min_pos = i;
-                for (j = i + 1; j < current_state_names.length; j++) {
+                for (j = i + 1; j < current_state_names.length; j++) {  // Search for the current minimum value in the list
                     if (Integer.parseInt(current_state_names[j]) < Integer.parseInt(current_state_names[min_pos]))
                         min_pos = j;
                 }
-                if (min_pos != i) {
+                if (min_pos != i) { // If the current value is not the minimum value, it will be reversed with the previously found minimum value.
                     temp = current_state_names[i];
                     current_state_names[i] = current_state_names[min_pos];
                     current_state_names[min_pos] = temp;
@@ -311,36 +332,38 @@ public class Automaton {
             }
 
             new_states = addState(new_states, new State(String.join(".", current_state_names), true, term));    // We add the composed initial state to the list of new_states
-            nb_new_states++;
+            nb_new_states++;    // Increment the number of new states
+
 
             i = 0;
-            while (i < nb_new_states) {
-                current_state_names = new_states[i].getNAME().split("\\.");
-                for (j = 0; j < NB_LETTER; j++) {
+            while (i < nb_new_states) { // This loop will run until we are sure there are no new states to add to the determinized automaton
+                current_state_names = new_states[i].getNAME().split("\\.");         // We put the names of the states composing the last state we added in the new_state list, so that we can find its associated transitions
+                for (j = 0; j < NB_LETTER; j++) {   // This loop will get through all the letters of the alphabet of the original automaton, to find all the transitions of the current new state
                     term = false;  // Determine if the end state of the transition is terminal or not
-                    state_name.setLength(0);
-                    for (k = 0; k < NB_TRANSITIONS; k++) {
-                        for (l = 0; l < current_state_names.length; l++) {
-                            if (TRANSITIONS[k].getSTART().getNAME().equals(current_state_names[l]) && TRANSITIONS[k].getLETTER() == (char) (97 + j)) {
-                                next_state_names = state_name.toString().split("\\.");
+                    state_name.setLength(0);    // We clear the content of the state name variable, to be able to use it again
+                    for (k = 0; k < NB_TRANSITIONS; k++) {  // This loop will get through all the transitions of the existing automaton, to find the ones that start by one of the states composing our current new state
+                        for (l = 0; l < current_state_names.length; l++) {  // This loop go through all the states composing the current new state
+                            if (TRANSITIONS[k].getSTART().getNAME().equals(current_state_names[l]) && TRANSITIONS[k].getLETTER() == (char) (97 + j)) {  // This condition checks if the start state of the transition we are looking at equals the current state we are looking at
+                                next_state_names = state_name.toString().split("\\.");  // Put the list of the states currently composing the new composed state in next_state_names
                                 m = 0;
-                                found = false;
+                                found = false;  // Now, we want to check if we already added the state we are looking at to the name of the new composed state or not
                                 while (!found && m < next_state_names.length) {
                                     if(TRANSITIONS[k].getEND().getNAME().equals(next_state_names[m]))
                                         found = true;
                                     m++;
                                 }
                                 if (!found) {
-                                    if (state_name.length() != 0)
+                                    if (state_name.length() != 0)   // If it is not the first state we are adding to the name of the new composed state, we must put a point to separate the states
                                         state_name.append('.');
-                                    state_name.append(TRANSITIONS[k].getEND().getNAME());
+                                    state_name.append(TRANSITIONS[k].getEND().getNAME());   // This line will add the state we are looking at to the name of the new composed state
                                 }
-                                if (TRANSITIONS[k].getEND().isFINAL())
+                                if (TRANSITIONS[k].getEND().isFINAL())  // This condition checks if the state we are adding was final or not
                                     term = true;
                             }
                         }
                     }
 
+                    // Now that we have the list of states composing our new composed state, we must order them in the ascending order (it is the same procedure as the one above)
                     next_state_names = state_name.toString().split("\\.");
                     for (k = 0; k < next_state_names.length; k++) {
                         min_pos = k;
@@ -355,29 +378,30 @@ public class Automaton {
                         }
                     }
                     state_name.setLength(0);
-                    state_name.append(String.join(".", next_state_names));
+                    state_name.append(String.join(".", next_state_names));  // Here, we update the content of state name, to have the states in the ascending order
 
+                    // Now, we want to know what is the end state of the transition we are creating
                     if (state_name.length() != 0) {
                         k = 0;
-                        end_tr = null;
+                        end_tr = null;  // This variable will contain the end state
                         while (end_tr == null && k < nb_new_states) {
                             if (state_name.toString().equals(new_states[k].getNAME()))
-                                end_tr = new_states[k];
+                                end_tr = new_states[k];     // Here is the case where the end state already exists in the list new states
                             k++;
                         }
-                        if (end_tr == null) {
+                        if (end_tr == null) {       // Here is the case where we should add the end state to the list new states
                             new_states = addState(new_states, new State(state_name.toString(), false, term));
                             end_tr = new_states[nb_new_states];
                             nb_new_states++;
                         }
 
-                        new_transitions = addTransition(new_transitions, new Transition(new_states[i], (char) (97 + j), end_tr));
-                        nb_new_transitions++;
+                        new_transitions = addTransition(new_transitions, new Transition(new_states[i], (char) (97 + j), end_tr));   // Now we can add the new transition to the list new transitions
+                        nb_new_transitions++;   // We shouldn't forget to increment the number of new transitions
                     }
                 }
                 i++;
             }
-            return new Automaton(NB_LETTER, new_states, nb_new_states, new_transitions, nb_new_transitions);
+            return new Automaton(NB_LETTER, new_states, nb_new_states, new_transitions, nb_new_transitions);    // This line will instantiate and return the determinized version of the original automaton
         }
 
         else{
