@@ -56,6 +56,10 @@ public class Automaton {
         }
     }
 
+    public State[] getSTATES() {
+        return STATES;
+    }
+
     private void setStates(String[] file) {
         boolean is_initial, is_final;
         String name;
