@@ -23,7 +23,6 @@ public class State {
      * @param name The name of the state to create
      * @param initial If the state is initial or not
      * @param terminal If the state is final or not
-     *
      * */
     public State(String name, boolean initial, boolean terminal){
         NAME = name;
