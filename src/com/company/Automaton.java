@@ -99,7 +99,6 @@ public class Automaton {
     }
 
 
-
     private Transition[] addTransition(Transition[] old_tr, Transition tr) {
         Transition[] new_tr = new Transition[old_tr.length + 1];
         System.arraycopy(old_tr, 0, new_tr, 0, old_tr.length);
