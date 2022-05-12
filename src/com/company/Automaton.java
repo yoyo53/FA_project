@@ -6,17 +6,16 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 // Object that will represent an automaton
 public class Automaton {
-    private final int NB_LETTER;
+    private final int NB_LETTER;                    // number of letters composing of the automaton
 
     private final State[] STATES;                             // List of states of the automaton
-    private final int NB_STATES;                    // Maximum number of states of the automaton
+    private final int NB_STATES;                    // Number of states of the automaton
 
     private final Transition[] TRANSITIONS;                   // List of transitions of the automaton
-    private final int NB_TRANSITIONS;               // Maximum number of transitions of the automaton
+    private final int NB_TRANSITIONS;               // Number of transitions of the automaton
 
 
     public Automaton(String address_file) {
@@ -926,13 +925,14 @@ public class Automaton {
                 writer.close();
             }
             catch (IOException exception) {
-                System.out.println("error");;
+                System.out.println("error");
             }
         }
         if (save == JFileChooser.CANCEL_OPTION) {
             System.out.println("you pressed cancel");
         }
     }
+
 
     @Override
     public String toString() {
