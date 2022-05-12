@@ -3,7 +3,7 @@ package com.company;
 public class Main {
 
     public static void main(String[] args) {
-        Automaton FA = new Automaton("automata/automata_35.txt");
+        Automaton FA = new Automaton("automata/automaton_10.txt");
         Automaton DFA = FA.determinize();
         Automaton CDFA = DFA.complete();
         Automaton MCDFA = CDFA.minimize();

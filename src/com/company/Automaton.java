@@ -561,7 +561,7 @@ public class Automaton {
                             k = 0;
                             found = false;
                             while (!found && k < nb_groups) {
-                                if (groups_name[k].equals(state_type.toString())) {
+                                if (groups_name[k].equals(state_type.toString()) && groups[k][0].isFINAL() == groups[i][j].isFINAL()) {
                                     groups[k][groups_size[k]] = groups[i][j];
                                     groups_size[k]++;
                                     found = true;
@@ -701,7 +701,7 @@ public class Automaton {
                             k = 0;
                             found = false;
                             while (!found && k < nb_groups) {
-                                if (groups_name[k].equals(state_type.toString())) {
+                                if (groups_name[k].equals(state_type.toString()) && groups[k][0].isFINAL() == groups[i][j].isFINAL()) {
                                     groups[k][groups_size[k]] = groups[i][j];
                                     groups_size[k]++;
                                     found = true;
