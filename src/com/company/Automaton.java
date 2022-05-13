@@ -250,7 +250,7 @@ public class Automaton {
         // Store the names of the states composing the epsilon closure as a list of strings (each element contain
         // the name of one state)
         String[] state_names;
-        boolean found;      // Allow to store the result of a condition that we will explain later
+        boolean found;      // Store the result of a condition that we will explain later
         int i;      // Counter for the loop
 
         // If there are already states in the closure, add a dot to separate the newly added state
@@ -289,98 +289,139 @@ public class Automaton {
      * @return An equivalent new synchronous automaton
      */
     public Automaton synchronize() {
-        Transition[] new_transitions = new Transition[0];       // Will contain the transitions of the new automaton
-        State[] new_states = new State[0];                      // Will contain the states of the new automaton
-        int nb_new_transitions = 0, nb_new_states = 0;          // Allow respectively to keep track of the number of new transitions and states
-        boolean initial,                                        //
-                found;                                          //
-        int i, j;                                               // Counters for the different loops
-        State start_tr, end_tr;                                 // Will respectively store the start state and end state of the studied transition
-        String[] closure;                                       // Will contain the epsilon closures of the different states
+        Transition[] new_transitions = new Transition[0];   // The list of transitions of the new automaton
+        State[] new_states = new State[0];          // The list of states of the new automaton
+        int nb_new_transitions = 0, nb_new_states = 0;    // Store respectively the number of new transitions and states
+        boolean initial;                // Determine if the new state we are crating is initial
+        boolean found;                  // Store the result of a condition that we will explain later
+        State start_tr, end_tr;     // Store respectively the start state and end state of the transition to create
+        String[] closure;         // Will contain the epsilon closures of the different states
+        int i, j;             // Counters for the different loops
 
-        if (isSynchronous())        // Check if the original automaton is not already synchronous
+        if (isSynchronous())        // If the original automaton is already synchronous then do nothing
             System.out.println("This automaton is already synchronous");
-        else{
-            // This part allows us to change, if need be, the initial argument of each state of the original automaton, by studying its epsilon closure
-            for (State state: STATES) {     // This loop goes through all the states of the original automaton
+        else{       // Else (if it's asynchronous), synchronize it
+            // Loop through each state of the original to create their equivalent in the synchronized automaton
+            for (State state: STATES) {
+                // If the current state is already initial, we don't have to do anything, just store that the state
+                // is initial
                 if (state.isINITIAL())
-                    initial = true;     // If the state is initial, we don't do anything
-                else {  // If the state is not initial, we should check if it is contained in the epsilon closure of an initial state
+                    initial = true;
+                // Else (if the state is not initial), check if the state is in the closure of at least one of the
+                // original initial states, if yes the state have to be initial in the synchronized automaton
+                else {
                     i = 0;
-                    initial = false;
-                    while (!initial && i < NB_STATES) { // This loop will go through all the list of states, unless initial change to true
-                        if(STATES[i].isINITIAL()) { // If we find an initial state, we will compute its epsilon closure
+                    initial = false;        // by default the state is non-initial here
+                    // Loop through all the states to compute the epsilon closure of the initial states
+                    while (!initial && i < NB_STATES) {
+                        if(STATES[i].isINITIAL()) {      // Check if the state is initial
+                            // If the state is initial, compute its epsilon closure and search if our current state
+                            // is in it
                             closure = epsilonClosure(STATES[i], "").split("\\.");
                             j = 0;
-                            while (!initial && j < closure.length) { // This loop will go through all the states contained in the epsilon closure, unless initial change to true
-                                if (state.getNAME().equals(closure[j])) // if we find the state we are studying in the epsilon closure of one initial state, we change initial to true
-                                    initial = true;
+                            // Loop through all the states contained in the epsilon closure to check if our current
+                            // state is one of them
+                            while (!initial && j < closure.length) {
+                                // If the current state is in the epsilon closure, then it has to be initial
+                                if (state.getNAME().equals(closure[j]))
+                                    initial = true;     // Store that the current state has to be initial
                                 j++;
                             }
                         }
                         i++;
                     }
                 }
-                new_states = addState(new_states, new State(state.getNAME(), initial, state.isFINAL()));    // We add the studied state to the list new_states
-                nb_new_states++;    // We increment the number of new states
+
+                // Now that we know if it has to be initial or not, we can create the new state and add it to the list
+                new_states = addState(new_states, new State(state.getNAME(), initial, state.isFINAL()));
+                nb_new_states++;    // Store that now there is one more new state
             }
 
-            // Now, we want to add in the list new_transitions only the useful transitions for the synchronous automaton
-            for (Transition tr: TRANSITIONS) {  // We go through the list of all transitions
-                if (tr.getLETTER() != '*') {    // We check if the studied transition is an epsilon transition or not
-                    i = 0;  // If it is not the case, we won't need to modify it, so we should find its start and end state in the list new_states, and add it to the list new_transitions
+            // Add the non-epsilon transitions of the original automaton in the new transitions one by one
+            for (Transition tr: TRANSITIONS) {
+                // Add the current transition only if it is not an epsilon transition
+                if (tr.getLETTER() != '*') {
+                    i = 0;
                     start_tr = null;
                     end_tr = null;
+                    // Loop through the state to find the new states corresponding to the start and end states of the
+                    // transition we want to create
                     while ((start_tr == null || end_tr == null) && i < nb_new_states) {
-                        if (tr.getSTART().getNAME().equals(new_states[i].getNAME()))    // This condition allows us to check if we found the start state or not
+                        if (tr.getSTART().getNAME().equals(new_states[i].getNAME())) {
+                            // When the new state corresponding to the start state is found store it in 'start_tr'
                             start_tr = new_states[i];
-                        if (tr.getEND().getNAME().equals(new_states[i].getNAME()))      // This condition allows us to check if we found the final state or not
+                        }
+                        if (tr.getEND().getNAME().equals(new_states[i].getNAME())) {
+                            // When the new state corresponding to the end state is found store it in 'end_tr'
                             end_tr = new_states[i];
+                        }
                         i++;
                     }
+                    // Now that we have all the information about the new transition, we can create it and add it to
+                    // the list of new transitions
                     new_transitions = addTransition(new_transitions, new Transition(start_tr, tr.getLETTER(), end_tr));     // We add the non-epsilon transition to the list new_transitions
-                    nb_new_transitions++;   // We increment the number of new transitions
+                    nb_new_transitions++;   // Store that now we have one more transition
                 }
             }
 
-            // Now we want to replace the epsilon transitions
-            for (i = 0; i < nb_new_states; i++) {   //
+            // Loop through all the states to replace all the epsilon transitions by non-epsilon ones
+            for (i = 0; i < nb_new_states; i++) {
+                // Get the epsilon closure of the current state
                 closure = epsilonClosure(STATES[i], "").split("\\.");
+                // Loop through the transitions to find all the non-epsilon transitions that ends at the current state
                 for (Transition tr: TRANSITIONS) {
+                    // Check if the current transition ends at the current state and recognize a non-epsilon letter
                     if (tr.getEND().getNAME().equals(new_states[i].getNAME()) && tr.getLETTER() != '*') {
+                        // Loop through all the state names contained in the epsilon closure of the current states to
+                        // create a new transition for each one of them
                         for (String name: closure) {
                             j = 0;
-                            found = false;
+                            found = false;      // Store if the transition we want to create already exists or not
+                            // Loop through all the new transitions to search if the transition we want to create
+                            // already exists
                             while (!found && j < nb_new_transitions) {
+                                // Check if the current new transition is the same as the one we want to create
                                 if (new_transitions[j].getSTART().getNAME().equals(tr.getSTART().getNAME())
                                         && new_transitions[j].getLETTER() == tr.getLETTER()
                                         && new_transitions[j].getEND().getNAME().equals(name))
-                                    found = true;
+                                    found = true;   // Store that the transition already exists
                                 j++;
                             }
 
+                            // If the transitions doesn't already exist (i.e. if found is still false), then create it
                             if (!found) {
                                 j = 0;
                                 start_tr = null;
                                 end_tr = null;
+                                // Loop through the state to find the new states corresponding to the start and end
+                                // states of the transition we want to create
                                 while ((start_tr == null || end_tr == null) && j < nb_new_states) {
-                                    if (tr.getSTART().getNAME().equals(new_states[j].getNAME()))
+                                    if (tr.getSTART().getNAME().equals(new_states[j].getNAME())) {
+                                        // When the new state corresponding to the start state is found store
+                                        // it in 'start_tr'
                                         start_tr = new_states[j];
-                                    if (name.equals(new_states[j].getNAME()))
+                                    }
+                                    if (name.equals(new_states[j].getNAME())) {
+                                        // When the new state corresponding to the end state is found store it
+                                        // in 'end_tr'
                                         end_tr = new_states[j];
+                                    }
                                     j++;
                                 }
+                                // Now that we have all the information about the new transition, we can create it and add it to
+                                // the list of new transitions
                                 new_transitions = addTransition(new_transitions, new Transition(start_tr, tr.getLETTER(), end_tr));
-                                nb_new_transitions++;
+                                nb_new_transitions++;   // Store that now we have one more transition
                             }
                         }
                     }
                 }
             }
 
-            // We have now the equivalent synchronous automaton
+            // We now have all the information about the equivalent synchronous automaton, we can create and return it
             return new Automaton(NB_LETTER, new_states, nb_new_states, new_transitions, nb_new_transitions);
         }
+        // Return by default the original automaton if nothing else have been returned
         return this;
     }
 
@@ -1254,11 +1295,11 @@ public class Automaton {
                 // transition to be able to create the new transition on the new states
                 while ((start_tr == null || end_tr == null) && j < NB_STATES) {
                     if (TRANSITIONS[i].getSTART().getNAME().equals(new_states[j].getNAME())) {
-                        // When the new state corresponding to the start state is found then store it in 'start_tr'
+                        // When the new state corresponding to the start state is found store it in 'start_tr'
                         start_tr = new_states[j];
                     }
                     if (TRANSITIONS[i].getEND().getNAME().equals(new_states[j].getNAME())) {
-                        // When the new state corresponding to the end state is found then store it in 'end_tr'
+                        // When the new state corresponding to the end state is found store it in 'end_tr'
                         end_tr = new_states[j];
                     }
                     j++;
