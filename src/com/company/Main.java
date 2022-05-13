@@ -62,7 +62,7 @@ public class Main {
         at.determinize().complete().printTable();
         System.out.println("___________");
         System.out.println("minimized");
-        at.determinize().complete().minimize();
+        at.determinize().complete().minimize().printTable();
 
     }
 
