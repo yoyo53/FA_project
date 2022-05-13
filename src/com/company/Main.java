@@ -48,4 +48,21 @@ public class Main {
         else
             System.out.println("The word '" + word + "' is not recognized by the automaton");
     }
+
+    public void testAutomaton(String name){
+        Automaton at = new Automaton(name);
+        System.out.println("initial");
+        at.printTable();
+        System.out.println("___________");
+        System.out.println("determinized");
+        at.determinize().printTable();
+        System.out.println("___________");
+        System.out.println("complete");
+        at.determinize().complete();
+        System.out.println("___________");
+        System.out.println("minimized");
+        at.determinize().complete().minimize();
+
+    }
+
 }

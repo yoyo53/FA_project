@@ -980,6 +980,14 @@ public class Automaton {
 
     }
 
+    public void printTable() {
+        for (String[] i : this.toTable()){
+            for (String j: i)
+                System.out.print(j);
+            System.out.println();
+        }
+    }
+
 
     /**
      * Check recursively if there is at least one path starting from the current state that recognize the
