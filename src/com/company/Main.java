@@ -3,7 +3,8 @@ package com.company;
 public class Main {
 
     public static void main(String[] args) {
-        Automaton FA = new Automaton("automata/automaton_22.txt");
+        testAutomaton("automata/automaton_12.txt");
+        /*Automaton FA = new Automaton("automata/automaton_22.txt");
 
         Automaton DFA = FA.determinize();
         Automaton CDFA = DFA.complete();
@@ -46,10 +47,10 @@ public class Main {
         if (MCDFA.testWord(word))
             System.out.println("The word '" + word + "' is recognized by the automaton.");
         else
-            System.out.println("The word '" + word + "' is not recognized by the automaton");
+            System.out.println("The word '" + word + "' is not recognized by the automaton");*/
     }
 
-    public void testAutomaton(String name){
+    static public void testAutomaton(String name){
         Automaton at = new Automaton(name);
         System.out.println("initial");
         at.printTable();
@@ -58,7 +59,7 @@ public class Main {
         at.determinize().printTable();
         System.out.println("___________");
         System.out.println("complete");
-        at.determinize().complete();
+        at.determinize().complete().printTable();
         System.out.println("___________");
         System.out.println("minimized");
         at.determinize().complete().minimize();

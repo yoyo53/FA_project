@@ -956,7 +956,7 @@ public class Automaton {
         for(i = 1; i < width; i++)
             table[0][i] = (char) (97 + i - 1)+"|";// 97 is the ascii code for "a" and we already set up the first one, so we start at one and take one out for the ascii code
         for(i = 1; i < height; i++)
-            table[i][0] = i-1+"|";
+            table[i][0] = STATES[i-1].getNAME()+"|"; // put the state names in the margin on the right
 
         for(i = 1; i < NB_LETTER+1; i++){
 
