@@ -577,6 +577,11 @@ public class Automaton {
         return true;
     }
 
+    /**
+     * Complete the automaton if it's not already the case
+     *
+     * @return a complete equivalent of the automaton
+     */
     public Automaton complete() {
         int i, j;
         boolean[][] state_and_letter = new boolean[NB_STATES][NB_LETTER]; // each state as a list of boolean that indicates whether the letter is used or not, first element is for 'a', last is for 'z'
