@@ -108,13 +108,6 @@ public class Automaton {
     }
 
     /**
-     * @return the list of states of the automaton
-     */
-    public State[] getSTATES() {
-        return STATES;
-    }
-
-    /**
      * Initialize the list of states of the automaton from the file
      *
      * @param file The file containing the automaton as a list of string (each element of the list is one line)
@@ -754,22 +747,33 @@ public class Automaton {
     }
 
     /**
-     * Check if the automaton is minimized or not
+     * Check if the automaton is minimal or not
      *
-     * @return true if the automaton is minimized and false otherwise
+     * @return true if the automaton is minimal and false otherwise
      */
-    public boolean isMinimized() {
+    public boolean isMinimal() {
+        // Respectively the table containing the list of states composing each group and a temporary version used to
+        // store the value of this variable when modifying the groups
         State[][] groups, groups_temp;
+        // Respectively the list containing the names of the groups and a temporary version used to store the value
+        // of this variable when modifying the groups
         String[] groups_name, groups_name_temp;
+        // Respectively the list containing the number of states in each group and a temporary version used to store
+        // the value of this variable when modifying the groups
         int[]  groups_size, groups_size_temp;
+        // Respectively the number of group and a temporary version used to store the value of this variable when
+        // modifying the groups
         int nb_groups, nb_groups_temp;
+        // The type of the state used to make the groups (the states with same type are in the same groups)
         StringBuilder state_type;
-        boolean found;
-        int i, j, k, l, m;
+        boolean found;      // Store the result of a condition that we will detail later
+        int i, j, k, l, m;      // Counters for the loops
 
+        // If the automaton is not complete deterministic then it can't be minimal, so return false
         if (!isDeterministic() || !isComplete())
             return false;
         else {
+            // initialise the variables
             nb_groups = 0;
             groups = new State[NB_STATES][NB_STATES];
             groups_name = new String[NB_STATES];
@@ -778,107 +782,170 @@ public class Automaton {
             groups_name_temp = new String[NB_STATES];
             groups_size_temp= new int[NB_STATES];
             state_type = new StringBuilder();
+
+            // Add the states into the first 2 groups - terminal (T) or non-terminal (NT) - one by one
             for (i = 0; i < NB_STATES; i++) {
+                // Clear the content of the StringBuilder to be able to make a new state
                 state_type.setLength(0);
-                if (STATES[i].isFINAL())
+                if (STATES[i].isFINAL())        // If the state is final, set its type as terminal (T)
                     state_type.append("T");
-                else
+                else                // Else (if the state is not final), set its type as non-terminal (NT)
                     state_type.append("NT");
 
                 j = 0;
+                // Determine if the group corresponding to the current state type already exists, by default it's false
                 found = false;
+                // Loop through all the groups and search if the group corresponding to the type of the current state
+                // already exist
                 while (!found && j < nb_groups) {
+                    // If the group corresponding to the type of the current state is found, then add the current state
+                    // to this group
                     if (state_type.toString().equals(groups_name[j])) {
-                        groups[j][groups_size[j]] = STATES[i];
-                        groups_size[j]++;
-                        found = true;
+                        groups[j][groups_size[j]] = STATES[i];      // Add the current state at the end of the group
+                        groups_size[j]++;       // Store that now there is one more state in this group
+                        found = true;       // Store that the group of the current state have already been found
                     }
                     j++;
                 }
+                // If the group corresponding to the type of the current state haven't been found (i.e. 'found' is
+                // still false), create a new group for the current state
                 if (!found) {
-                    groups[nb_groups][0] = STATES[i];
+                    groups[nb_groups][0] = STATES[i];       // Add the current state to a new group
+                    // Set the name of this new group as the type of the current state
                     groups_name[nb_groups] = state_type.toString();
-                    groups_size[nb_groups] = 1;
-                    nb_groups++;
+                    groups_size[nb_groups] = 1;         // Store that now there is one state in this group
+                    nb_groups++;        // Store that now there is one more group
                 }
             }
 
+            // Execute this code at least once, and stop only when the groups don't change anymore or when each state
+            // is in a separated group
             do {
+                // Loop through all the groups to rename and copy them
                 for (i = 0; i < nb_groups; i++) {
+                    // Rename each group by just it's number to prevent having longer and longer names at each iteration
+                    // of the do while loop
                     groups_name[i] = String.valueOf(i);
-                    for (j = 0; j < groups_size[i]; j++)
-                        groups_temp[i][j] = groups[i][j];
+                    // Copy the group in variable 'group_temp' to save the actual content of each group
+                    System.arraycopy(groups[i], 0, groups_temp[i], 0, groups_size[i]);
                 }
+                // Copy the names of all the groups in the variable 'groups_name_temp' to save their actual values
                 System.arraycopy(groups_name, 0, groups_name_temp, 0, nb_groups);
+                // Copy the sizes of all the groups in the variable 'groups_size_temp' to save their actual values
                 System.arraycopy(groups_size, 0, groups_size_temp, 0, nb_groups);
-                nb_groups_temp = nb_groups;
+                nb_groups_temp = nb_groups;     // Save the actual number of groups in the variable 'nb_groups_temp'
 
-                for (i = 0; i < nb_groups; i++) {
+                for (i = 0; i < nb_groups; i++) {     // Loop through all the groups to check if they need to be split
+                    // Clear the content of the StringBuilder to be able to make a new state
                     state_type.setLength(0);
+                    state_type.append(groups_name_temp[i]); // Add the name of the current group to its own type
+                    // Loop through all letters of the alphabet of the automaton to determine the type of the current
+                    // group (which will be the type of its first state)
                     for (j = 0; j < NB_LETTER; j++) {
                         k = 0;
+                        // Determine if the group containing the end state of the transition starting from the first
+                        // state of the current group and recognizing the current letter have already been found or not
                         found = false;
+                        // Loop through the old groups to find the one that contain the end state of the transition
+                        // starting from the first state of the current group and recognizing the current letter
                         while (!found && k < nb_groups_temp) {
                             l = 0;
+                            // Loop through the state of the current old group to check if one of them is the state we
+                            // are searching
                             while (!found && l < groups_size_temp[k]) {
+                                // If the corresponding state is found, add its group to the type of the current group
                                 if (groups_temp[k][l] == getTransition(groups[i][0], (char) (97 + j))) {
-                                    state_type.append(groups_name_temp[k]);
+                                    // Add a dot to separate the newly added group name from the ones already added
                                     state_type.append(".");
-                                    found = true;
+                                    state_type.append(groups_name_temp[k]);     // Add the name of the group we found
+                                    found = true;       // Store that the group we were searching have been found
                                 }
                                 l++;
                             }
                             k++;
                         }
                     }
+                    // Rename the current group by its type (the type of its first state)
                     groups_name[i] = state_type.toString();
 
                     j = 1;
+                    // Loop through all the states of the current groups to check if they need to be split in another
+                    // group (i.e. if they have a type different from the one of the group)
                     while (j < groups_size[i]) {
+                        // Clear the content of the StringBuilder to be able to make a new state
                         state_type.setLength(0);
+                        state_type.append(groups_name_temp[i]); // Add the name of its group to the type of the state
+                        // Loop through all letters of the alphabet of the automaton to determine the type of the
+                        // current state
                         for (k = 0; k < NB_LETTER; k++) {
                             l = 0;
+                            // Determine if the group containing the end state of the transition starting from the
+                            // current state and recognizing the current letter have already been found or not
                             found = false;
+                            // Loop through the old groups to find the one that contain the end state of the transition
+                            // starting from the current state and recognizing the current letter
                             while (!found && l < nb_groups_temp) {
                                 m = 0;
+                                // Loop through the state of the current old group to check if one of them is the state
+                                // we are searching
                                 while (!found && m < groups_size_temp[l]) {
+                                    // If the corresponding state is found, add its group to the type of the current
+                                    // state
                                     if (groups_temp[l][m] == getTransition(groups[i][j], (char) (97 + k))) {
-                                        state_type.append(groups_name_temp[l]);
+                                        // Add a dot to separate the newly added group name from the ones already added
                                         state_type.append(".");
-                                        found = true;
+                                        state_type.append(groups_name_temp[l]);  // Add the name of the group we found
+                                        found = true;       // Store that the group we were searching have been found
                                     }
                                     m++;
                                 }
                                 l++;
                             }
                         }
+
+                        // If the type of the current state is the same as the one of its group, do nothing and go to
+                        // the next state
                         if (groups_name[i].equals(state_type.toString()))
                             j++;
-                        else {
+                        else {      // Else, this state have to bo removed from its group and put in a new one
                             k = 0;
+                            // Determine if the group corresponding to the current state type already exists, by
+                            // default it's false
                             found = false;
+                            // Loop through all the groups and search if the group corresponding to the type of the
+                            // current state already exist
                             while (!found && k < nb_groups) {
-                                if (groups_name[k].equals(state_type.toString()) && groups[k][0].isFINAL() == groups[i][j].isFINAL()) {
+                                // If the group corresponding to the type of the current state is found, then add the
+                                // current state to this group
+                                if (groups_name[k].equals(state_type.toString())) {
+                                    // Add the current state at the end of the group
                                     groups[k][groups_size[k]] = groups[i][j];
-                                    groups_size[k]++;
-                                    found = true;
+                                    groups_size[k]++;   // Store that now there is one more state in this group
+                                    found = true;     // Store that the researched group have been found
                                 }
                                 k++;
                             }
+
+                            // If the group corresponding to the type of the current state haven't been found
+                            // (i.e. 'found' is still false), create a new group for the current state
                             if (!found) {
-                                groups[nb_groups][0] = groups[i][j];
+                                groups[nb_groups][0] = groups[i][j];    // Add the current state to a new group
+                                // Set the name of this new group as the type of the current state
                                 groups_name[nb_groups] = state_type.toString();
-                                groups_size[nb_groups] = 1;
-                                nb_groups++;
+                                groups_size[nb_groups] = 1;     // Store that now there is one state in this group
+                                nb_groups++;        // Store that now there is one more group
                             }
-                            for (k = j; k < groups_size[i]; k++)
+                            for (k = j; k < groups_size[i]; k++)      // Delete the current state from its old group
                                 groups[i][j] = groups[i][j + 1];
-                            groups_size[i]--;
+                            groups_size[i]--;       // Store that now there is one less group
                         }
                     }
                 }
             }
             while (nb_groups != NB_STATES && nb_groups != nb_groups_temp);
+
+            // If each state is in a separated group (i.e. there is as many groups as states), then the automaton is
+            // minimal, so return true, else return false
             return nb_groups == NB_STATES;
         }
     }
@@ -889,24 +956,36 @@ public class Automaton {
      * @return a minimal equivalent of the automaton
      * */
     public Automaton minimize() {
+        // Respectively the table containing the list of states composing each group and a temporary version used to
+        // store the value of this variable when modifying the groups
         State[][] groups, groups_temp;
+        // Respectively the list containing the names of the groups and a temporary version used to store the value
+        // of this variable when modifying the groups
         String[] groups_name, groups_name_temp;
+        // Respectively the list containing the number of states in each group and a temporary version used to store
+        // the value of this variable when modifying the groups
         int[]  groups_size, groups_size_temp;
+        // Respectively the number of group and a temporary version used to store the value of this variable when
+        // modifying the groups
         int nb_groups, nb_groups_temp;
+        // The type of the state used to make the groups (the states with same type are in the same groups)
         StringBuilder state_type;
-        State[] new_states;
-        Transition[] new_transitions;
-        State end = null;
-        boolean found, is_initial;
-        int i, j, k, l, m;
+        State[] new_states;     // The new list of states
+        Transition[] new_transitions;       // The new list of transitions
+        State end_tr;           // Store the end state of the transition to create
+        boolean is_initial;     // Determine is the composed state to create is initial
+        boolean found;      // Store the result of a condition that we will detail later
+        int i, j, k, l, m;      // Counters for the loops
 
-        if (!isDeterministic())
+
+        if (!isDeterministic())     // If the automaton is not deterministic then it can't be minimized, so do nothing
             System.out.println("This automaton is not deterministic.");
-        else if (!isComplete())
+        else if (!isComplete())     // If the automaton is not complete then it can't be minimized, so do nothing
             System.out.println("This automaton is not complete.");
-        else if (isMinimized())
-            System.out.println("This automaton is already minimized.");
+        else if (isMinimal())     // Do nothing if the automaton is already minimal
+            System.out.println("This automaton is already minimal.");
         else {
+            // initialise the variables
             nb_groups = 0;
             groups = new State[NB_STATES][NB_STATES];
             groups_name = new String[NB_STATES];
@@ -916,141 +995,229 @@ public class Automaton {
             groups_size_temp= new int[NB_STATES];
             state_type = new StringBuilder();
 
+            // Add the states into the first 2 groups - terminal (T) or non-terminal (NT) - one by one
             for (i = 0; i < NB_STATES; i++) {
+                // Clear the content of the StringBuilder to be able to make a new state
                 state_type.setLength(0);
-                if (STATES[i].isFINAL())
+                if (STATES[i].isFINAL())        // If the state is final, set its type as terminal (T)
                     state_type.append("T");
-                else
+                else                // Else (if the state is not final), set its type as non-terminal (NT)
                     state_type.append("NT");
 
                 j = 0;
+                // Determine if the group corresponding to the current state type already exists, by default it's false
                 found = false;
+                // Loop through all the groups and search if the group corresponding to the type of the current state
+                // already exist
                 while (!found && j < nb_groups) {
+                    // If the group corresponding to the type of the current state is found, then add the current state
+                    // to this group
                     if (state_type.toString().equals(groups_name[j])) {
-                        groups[j][groups_size[j]] = STATES[i];
-                        groups_size[j]++;
-                        found = true;
+                        groups[j][groups_size[j]] = STATES[i];      // Add the current state at the end of the group
+                        groups_size[j]++;       // Store that now there is one more state in this group
+                        found = true;       // Store that the group of the current state have already been found
                     }
                     j++;
                 }
+                // If the group corresponding to the type of the current state haven't been found (i.e. 'found' is
+                // still false), create a new group for the current state
                 if (!found) {
-                    groups[nb_groups][0] = STATES[i];
+                    groups[nb_groups][0] = STATES[i];       // Add the current state to a new group
+                    // Set the name of this new group as the type of the current state
                     groups_name[nb_groups] = state_type.toString();
-                    groups_size[nb_groups] = 1;
-                    nb_groups++;
+                    groups_size[nb_groups] = 1;         // Store that now there is one state in this group
+                    nb_groups++;        // Store that now there is one more group
                 }
             }
 
+            // Execute this code at least once, and stop only when the groups don't change anymore or when each state
+            // is in a separated group
             do {
+                // Loop through all the groups to rename and copy them
                 for (i = 0; i < nb_groups; i++) {
+                    // Rename each group by just it's number to prevent having longer and longer names at each iteration
+                    // of the do while loop
                     groups_name[i] = String.valueOf(i);
-                    for (j = 0; j < groups_size[i]; j++)
-                        groups_temp[i][j] = groups[i][j];
+                    // Copy the group in variable 'group_temp' to save the actual content of each group
+                    System.arraycopy(groups[i], 0, groups_temp[i], 0, groups_size[i]);
                 }
+                // Copy the names of all the groups in the variable 'groups_name_temp' to save their actual values
                 System.arraycopy(groups_name, 0, groups_name_temp, 0, nb_groups);
+                // Copy the sizes of all the groups in the variable 'groups_size_temp' to save their actual values
                 System.arraycopy(groups_size, 0, groups_size_temp, 0, nb_groups);
-                nb_groups_temp = nb_groups;
+                nb_groups_temp = nb_groups;     // Save the actual number of groups in the variable 'nb_groups_temp'
 
-                for (i = 0; i < nb_groups; i++) {
+                for (i = 0; i < nb_groups; i++) {     // Loop through all the groups to check if they need to be split
+                    // Clear the content of the StringBuilder to be able to make a new state
                     state_type.setLength(0);
+                    state_type.append(groups_name_temp[i]); // Add the name of the current group to its own type
+                    // Loop through all letters of the alphabet of the automaton to determine the type of the current
+                    // group (which will be the type of its first state)
                     for (j = 0; j < NB_LETTER; j++) {
                         k = 0;
+                        // Determine if the group containing the end state of the transition starting from the first
+                        // state of the current group and recognizing the current letter have already been found or not
                         found = false;
+                        // Loop through the old groups to find the one that contain the end state of the transition
+                        // starting from the first state of the current group and recognizing the current letter
                         while (!found && k < nb_groups_temp) {
                             l = 0;
+                            // Loop through the state of the current old group to check if one of them is the state we
+                            // are searching
                             while (!found && l < groups_size_temp[k]) {
+                                // If the corresponding state is found, add its group to the type of the current group
                                 if (groups_temp[k][l] == getTransition(groups[i][0], (char) (97 + j))) {
-                                    state_type.append(groups_name_temp[k]);
+                                    // Add a dot to separate the newly added group name from the ones already added
                                     state_type.append(".");
-                                    found = true;
+                                    state_type.append(groups_name_temp[k]);     // Add the name of the group we found
+                                    found = true;       // Store that the group we were searching have been found
                                 }
                                 l++;
                             }
                             k++;
                         }
                     }
+                    // Rename the current group by its type (the type of its first state)
                     groups_name[i] = state_type.toString();
 
                     j = 1;
+                    // Loop through all the states of the current groups to check if they need to be split in another
+                    // group (i.e. if they have a type different from the one of the group)
                     while (j < groups_size[i]) {
+                        // Clear the content of the StringBuilder to be able to make a new state
                         state_type.setLength(0);
+                        state_type.append(groups_name_temp[i]); // Add the name of its group to the type of the state
+                        // Loop through all letters of the alphabet of the automaton to determine the type of the
+                        // current state
                         for (k = 0; k < NB_LETTER; k++) {
                             l = 0;
+                            // Determine if the group containing the end state of the transition starting from the
+                            // current state and recognizing the current letter have already been found or not
                             found = false;
+                            // Loop through the old groups to find the one that contain the end state of the transition
+                            // starting from the current state and recognizing the current letter
                             while (!found && l < nb_groups_temp) {
                                 m = 0;
+                                // Loop through the state of the current old group to check if one of them is the state
+                                // we are searching
                                 while (!found && m < groups_size_temp[l]) {
+                                    // If the corresponding state is found, add its group to the type of the current
+                                    // state
                                     if (groups_temp[l][m] == getTransition(groups[i][j], (char) (97 + k))) {
-                                        state_type.append(groups_name_temp[l]);
+                                        // Add a dot to separate the newly added group name from the ones already added
                                         state_type.append(".");
-                                        found = true;
+                                        state_type.append(groups_name_temp[l]);  // Add the name of the group we found
+                                        found = true;       // Store that the group we were searching have been found
                                     }
                                     m++;
                                 }
                                 l++;
                             }
                         }
+
+                        // If the type of the current state is the same as the one of its group, do nothing and go to
+                        // the next state
                         if (groups_name[i].equals(state_type.toString()))
                             j++;
-                        else {
+                        else {      // Else, this state have to bo removed from its group and put in a new one
                             k = 0;
+                            // Determine if the group corresponding to the current state type already exists, by
+                            // default it's false
                             found = false;
+                            // Loop through all the groups and search if the group corresponding to the type of the
+                            // current state already exist
                             while (!found && k < nb_groups) {
-                                if (groups_name[k].equals(state_type.toString()) && groups[k][0].isFINAL() == groups[i][j].isFINAL()) {
+                                // If the group corresponding to the type of the current state is found, then add the
+                                // current state to this group
+                                if (groups_name[k].equals(state_type.toString())) {
+                                    // Add the current state at the end of the group
                                     groups[k][groups_size[k]] = groups[i][j];
-                                    groups_size[k]++;
-                                    found = true;
+                                    groups_size[k]++;   // Store that now there is one more state in this group
+                                    found = true;     // Store that the researched group have been found
                                 }
                                 k++;
                             }
+
+                            // If the group corresponding to the type of the current state haven't been found
+                            // (i.e. 'found' is still false), create a new group for the current state
                             if (!found) {
-                                groups[nb_groups][0] = groups[i][j];
+                                groups[nb_groups][0] = groups[i][j];    // Add the current state to a new group
+                                // Set the name of this new group as the type of the current state
                                 groups_name[nb_groups] = state_type.toString();
-                                groups_size[nb_groups] = 1;
-                                nb_groups++;
+                                groups_size[nb_groups] = 1;     // Store that now there is one state in this group
+                                nb_groups++;        // Store that now there is one more group
                             }
-                            for (k = j; k < groups_size[i]; k++)
+                            for (k = j; k < groups_size[i]; k++)      // Delete the current state from its old group
                                 groups[i][j] = groups[i][j + 1];
-                            groups_size[i]--;
+                            groups_size[i]--;       // Store that now there is one less group
                         }
                     }
                 }
             }
             while (nb_groups != NB_STATES && nb_groups != nb_groups_temp);
 
+            // Initialize the list of states, there will be as many states as there are groups
             new_states = new State[nb_groups];
+            // Initialize the list of transitions, as minimization is made only on complete deterministic automata,
+            // the number of transitions is equal to the number of groups multiplied by the number of letters in
+            // the alphabet of the automaton
             new_transitions = new Transition[nb_groups * NB_LETTER];
-            for (i = 0; i < nb_groups; i++) {
+
+            for (i = 0; i < nb_groups; i++) {   // Loop through all the groups to create all the new states
+                // Determine if the state corresponding to the current group have to be initial, by default it's false
                 is_initial = false;
                 j = 0;
+                // Loop through all the states composing the current group to search if at least one of the is initial,
+                // if yes, the state corresponding to this group will also be initial
                 while (!is_initial && j < groups_size[i]) {
-                    if (groups[i][j].isINITIAL())
-                        is_initial = true;
+                    if (groups[i][j].isINITIAL())     // Check if the state is initial
+                        is_initial = true;      // Store that this group have to be initial
                     j++;
                 }
+
+                // If the group is final, then all the state composing it are also final, and reversely if the group
+                // is non-final, then all the state composing it are non-final. Therefore, it's sufficient to test only
+                // the first state of the group.
+                // We now have all the information about the new composed state, we can create it and add it to the list
                 new_states[i] = new State(String.valueOf(i), is_initial, groups[i][0].isFINAL());
             }
-            for (i = 0; i < nb_groups; i++) {
+
+            for (i = 0; i < nb_groups; i++) {   // Now loop through all the groups to create all the new transitions
+                // Loop through all the letters of the alphabet of the automaton to create all the transitions starting
+                // from this state
                 for (j = 0; j < NB_LETTER; j++) {
                     k = 0;
-                    found = false;
-                    while (!found && k < nb_groups) {
+                    end_tr = null;    // Store the new composed state that will be the end state of the new transition
+                    // As the states that are in the same group have all their transitions going to the same groups,
+                    // it is sufficient to just test the first state of each group to find the end group
+                    // So loop through all the groups to find the group containing the end state of the transition
+                    // starting from the first state of the current group and recognizing the current letter
+                    while (end_tr == null && k < nb_groups) {
                         l = 0;
-                        while (!found && l < groups_size[k]) {
+                        // Loop through all the states of the group to check if one of them is the researched state
+                        while (end_tr == null && l < groups_size[k]) {
+                            // If the desired state have been found, then we can save its group as being the end state
+                            // of the transition we are creating
                             if (getTransition(groups[i][0], (char)(97 + j)) == groups[k][l]) {
-                                end = new_states[k];
-                                found = true;
+                                // Save the new state corresponding to the group containing this researched state
+                                // in 'end_tr' to be able to construct the new transition
+                                end_tr = new_states[k];
                             }
                             l++;
                         }
                         k++;
                     }
-                    new_transitions[i * NB_LETTER + j] = new Transition(new_states[i], (char)(97 + j), end);
+
+                    // We now have all the information about the new transition, we can create it and add it to the list
+                    new_transitions[i * NB_LETTER + j] = new Transition(new_states[i], (char)(97 + j), end_tr);
                 }
             }
 
+            // We now have all the information about the minimal automaton equivalent to the original one, we can
+            // create it and return it
             return new Automaton(NB_LETTER, new_states, nb_groups, new_transitions, nb_groups * NB_LETTER);
             }
+        // Return by default the original automaton if nothing else have been returned
         return this;
     }
 
@@ -1149,13 +1316,21 @@ public class Automaton {
     public void printTable() {
         String[][] table = toTable();
 
-        System.out.print(" ");
+        System.out.print("     ");
         for (int i = 0; i < NB_LETTER; i++)
             System.out.print("|" + (char) (97 + i));
         System.out.println();
 
         for (int i = 0; i < NB_STATES; i++){
-            System.out.print(STATES[i].getNAME());
+            if (STATES[i].isINITIAL() && STATES[i].isFINAL())
+                System.out.print("<->");
+            else if (STATES[i].isINITIAL())
+                System.out.print("-->");
+            else if (STATES[i].isFINAL())
+                System.out.print("<--");
+            else
+                System.out.print("   ");
+            System.out.print("|" + STATES[i].getNAME());
             for (int j = 0; j < NB_LETTER; j++)
                 if (table[i][j] == null)
                     System.out.print("|-");

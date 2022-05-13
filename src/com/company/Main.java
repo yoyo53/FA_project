@@ -3,7 +3,7 @@ package com.company;
 public class Main {
 
     public static void main(String[] args) {
-        testAutomaton("automata/automaton_12.txt");
+        testAutomaton("automata/automaton_09.txt");
         /*
         Automaton FA = new Automaton("automata/automaton_22.txt");
 
