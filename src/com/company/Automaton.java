@@ -232,7 +232,7 @@ public class Automaton {
      * @return true if the automaton is synchronous and false otherwise
      */
     public boolean isSynchronous() {
-        // To find if an automaton is synchronous or not, we need to iterate through all its transition and check
+        // To find if an automaton is synchronous or not, we need to loop through all its transition and check
         // if there are epsilon transitions
         for(Transition tr: TRANSITIONS)
             if (tr.getLETTER() == '*') {    // Check if the transition is an epsilon transition
@@ -449,7 +449,7 @@ public class Automaton {
        int min_pos;     // Store the index of the current minimum of the list
        String temp;     // Store temporarily the name of a state when inverting two of them in the list
 
-       // Iterates through all positions of the list to sort it element by element
+       // Loop through all positions of the list to sort it element by element
        for (int i = 0; i < states_names.length; i++) {
            min_pos = i;     // initialize the minimum as the first element of the remaining unsorted list
            // Search for the minimum value in the remaining unsorted list
@@ -700,7 +700,7 @@ public class Automaton {
             // Copy all the old states to the new list of states
             System.arraycopy(STATES, 0, new_states, 0, NB_STATES);
             // Create the trash state and add it at the end of the new list of states
-            new_states[NB_STATES] = new State("Trash", false, false);
+            new_states[NB_STATES] = new State("T", false, false);
 
             // already existing transition (not modified) + missing transition + transition from trash to trash
             new_transitions = new Transition[NB_TRANSITIONS + nb_missing + NB_LETTER];
@@ -733,6 +733,25 @@ public class Automaton {
         return this;
     }
 
+
+    /**
+     * Find the end state of the transition starting from a specific state and with a specific letter
+     *
+     * @param state The start state of the transition
+     * @param letter The letter of the transition
+     *
+     * @return the end state of the transition
+     */
+    private State getTransition(State state, char letter) {
+        // Loop through all the transitions of the automaton to search for the one that have the desired start state
+        // and the desired recognized letter
+        for (Transition tr: TRANSITIONS) {
+            // If the matching transition is found (good start state and recognized letter), then return its end state
+            if (tr.getSTART() == state && tr.getLETTER() == letter)
+                return tr.getEND();
+        }
+        return null;        // If no transition have been found then return null
+    }
 
     /**
      * Check if the automaton is minimized or not
@@ -862,21 +881,6 @@ public class Automaton {
             while (nb_groups != NB_STATES && nb_groups != nb_groups_temp);
             return nb_groups == NB_STATES;
         }
-    }
-
-    /**
-     * Find the end state of the transition starting from a specific state and with a specific letter
-     *
-     * @param state The start state of the transition
-     * @param letter The letter of the transition
-     *
-     * @return the end state of the transition
-     */
-    private State getTransition(State state, char letter) {
-        for (Transition tr: TRANSITIONS)
-            if (tr.getSTART() == state && tr.getLETTER() == letter)
-                return tr.getEND();
-        return null;
     }
 
     /**
@@ -1057,38 +1061,53 @@ public class Automaton {
      * @return the complement of the automaton
      */
     public Automaton complement() {
-        State[] new_states = new State[NB_STATES];
-        Transition[] new_transitions = new Transition[NB_TRANSITIONS];
-        State start_tr, end_tr;
-        int i, j;
+        State[] new_states = new State[NB_STATES];      // The new list of states
+        Transition[] new_transitions = new Transition[NB_TRANSITIONS];          // The new list of transitions
+        State start_tr, end_tr;         // Store respectively the start of end state of the transition to create
+        int i, j;           // Counters for the loops
 
-        if (!isDeterministic())
+        if (!isDeterministic())   // If the automaton is not deterministic the algorithm can't be applied, so do nothing
             System.out.println("This automaton is not deterministic.");
-        else if (!isComplete())
+        else if (!isComplete())     // If the automaton is not complete the algorithm can't be applied, so do nothing
             System.out.println("This automaton is not complete.");
-        else {
+        else {      // Else (if the automaton is complete deterministic), then make its complement and return it
+
+            // Copy all the states of the original automaton by just inverting the final states: final states become
+            // non-final and non-final states become final
             for (i = 0; i < NB_STATES; i++) {
                 new_states[i] = new State(STATES[i].getNAME(), STATES[i].isINITIAL(), !STATES[i].isFINAL());
             }
 
+            // Copy all the transitions of the original automaton (but they are on the new states)
             for (i = 0; i < NB_TRANSITIONS; i++) {
                 j = 0;
                 start_tr = null;
                 end_tr = null;
+                // Loop through the state to find the new states corresponding to the start and end states of the
+                // transition to be able to create the new transition on the new states
                 while ((start_tr == null || end_tr == null) && j < NB_STATES) {
-                    if (TRANSITIONS[i].getSTART().getNAME().equals(new_states[j].getNAME()))
+                    if (TRANSITIONS[i].getSTART().getNAME().equals(new_states[j].getNAME())) {
+                        // When the new state corresponding to the start state is found then store it in 'start_tr'
                         start_tr = new_states[j];
-                    if (TRANSITIONS[i].getEND().getNAME().equals(new_states[j].getNAME()))
+                    }
+                    if (TRANSITIONS[i].getEND().getNAME().equals(new_states[j].getNAME())) {
+                        // When the new state corresponding to the end state is found then store it in 'end_tr'
                         end_tr = new_states[j];
+                    }
                     j++;
                 }
+
+                // We now have all the information about the new transition, we can create it and put it in the list
                 new_transitions[i] = new Transition(start_tr, TRANSITIONS[i].getLETTER(), end_tr);
             }
 
+            // We now have all the information about the complement of our automaton, we can create it and return it
             return new Automaton(NB_LETTER, new_states, NB_STATES, new_transitions, NB_TRANSITIONS);
         }
+        // Return by default the original automaton if nothing else have been returned
         return this;
     }
+
 
     /**
      * Create a table representing the transitions of the automaton
@@ -1096,46 +1115,52 @@ public class Automaton {
      * @return the 2D list of strings that represents the transitions of the automaton
      */
     public String[][] toTable(){
-        String[][] table;
-        int width = NB_LETTER+1; //The width should be the number of possible input plus a column on the left(states) for the margin
-        int height = NB_STATES+1 ; //The length should be the number of states plus a row on top(inputs) for the margin
-        int i,j; // index
-        StringBuilder transition = new StringBuilder();
+        String[][] table = new String[NB_STATES][NB_LETTER];        // The table of transitions of the automaton
+        // Save the name of the end states of the transition starting from a state and recognizing a specific letter
+        StringBuilder transitions = new StringBuilder();
+        int i, j; // Counters for the loops
 
-        table = new String[height][width];
-
-        table[0][0] = " ";// top left corner empty
-        for(i = 1; i < width; i++)
-            table[0][i] = (char) (97 + i - 1)+"|";// 97 is the ascii code for "a" and we already set up the first one, so we start at one and take one out for the ascii code
-        for(i = 1; i < height; i++)
-            table[i][0] = STATES[i-1].getNAME()+"|"; // put the state names in the margin on the right
-
-        for(i = 1; i < NB_LETTER+1; i++){
-
-            for(j = 1; j < NB_STATES+1; j++){
-                transition.setLength(0); // clear the StringBuilder
-                for(Transition tr : TRANSITIONS){
-                    if(tr.getLETTER() == (char) (97+i-1) && tr.getSTART() == STATES[j-1]) { // if the input and the initial state are the same as the one in the transition
-                        if(transition.length() > 0) // if there is already one state for the transition, put a separator
-                            transition.append(",");
-                        transition.append(tr.getEND().getNAME());
+        for (i = 0; i < NB_STATES; i++){    // Fill all the table state by state
+            for (j = 0; j < NB_LETTER; j++){    // Fill the line corresponding to the current state letter by letter
+                transitions.setLength(0); // Clear the content of the StringBuilder to create a new cell of the table
+                // Loop through all the transitions to find the ones of the current state recognizing the current letter
+                for (Transition tr : TRANSITIONS){
+                    // If we find a transition matching (with the good start state and recognized letter), add the end
+                    // state of this transition to 'transitions'
+                    if (tr.getLETTER() == (char) (97 + j) && tr.getSTART() == STATES[i]) {
+                        // If there are already states in 'transitions', put a separator before adding the new state
+                        if (transitions.length() > 0)
+                            transitions.append(", ");
+                        // Add the end state of the transition
+                        transitions.append(tr.getEND().getNAME());
                     }
                 }
-                if(transition.length() == 0)// if null put a separator
-                    transition.append(" ");
-                transition.append("|");
-                table[j][i] = transition.toString(); // enter the transition in the table
+                if (transitions.length() == 0)      // if no transition have been found then put null in the cell
+                    table[i][j] = null;
+                else                // Else enter the value of 'transitions' in the table
+                    table[i][j] = transitions.toString();
             }
-
         }
-        return table;
 
+        // Return the table once all the cells have been filled with the transitions
+        return table;
     }
 
     public void printTable() {
-        for (String[] i : this.toTable()){
-            for (String j: i)
-                System.out.print(j);
+        String[][] table = toTable();
+
+        System.out.print(" ");
+        for (int i = 0; i < NB_LETTER; i++)
+            System.out.print("|" + (char) (97 + i));
+        System.out.println();
+
+        for (int i = 0; i < NB_STATES; i++){
+            System.out.print(STATES[i].getNAME());
+            for (int j = 0; j < NB_LETTER; j++)
+                if (table[i][j] == null)
+                    System.out.print("|-");
+                else
+                    System.out.print("|" + table[i][j]);
             System.out.println();
         }
     }
@@ -1152,32 +1177,39 @@ public class Automaton {
      * @return true is there is at least path starting from the state that recognize the word and false otherwise
      */
     private boolean testWordByState(String word, State state, Transition[] old_transitions) {
-        int i, j;
-        boolean found;
+        boolean found;      // Check if we are not going in an epsilon transitions loop
+        int i, j;       // Counters for the loops
 
-        if (word.isEmpty())   // recognize the word if we reach its end and if the current state is final
+        if (word.isEmpty())   // Recognize the word if we reach its end and if the current state is final
             return state.isFINAL();
         for (i = 0; i < NB_TRANSITIONS; i++) {
-            // if there are transitions starting from this state with the fist character of the word, check if at least
+            // If there are transitions starting from this state with the fist character of the word, check if at least
             // one of the end states of those transitions recognize the rest of the word, if yes the word is recognized
             if (TRANSITIONS[i].getLETTER() == word.charAt(0) && TRANSITIONS[i].getSTART() == state)
                 if (testWordByState(word.substring(1), TRANSITIONS[i].getEND(), addTransition(old_transitions, TRANSITIONS[i])))
                     return true;
-            // if there are epsilon transitions starting from this state, check if the at least one of the end states
+            // If there are epsilon transitions starting from this state, check if at least one of the end states
             // of those transitions recognize the word, if yes the word is recognized
             if (TRANSITIONS[i].getLETTER() == '*' && TRANSITIONS[i].getSTART() == state) {
-                j = old_transitions.length - 1;
-                found = false;                   // check if we are not looping on the epsilon transitions
+                j = old_transitions.length - 1;     // Start our loop from the end of the already done path
+                found = false;        // Check if we are not looping on the epsilon transitions, by default it's false
                 while (!found && j >= 0 && old_transitions[j].getLETTER() == '*') {
+                    // If the end state of the current transition is on our path, and we only used epsilon transition
+                    // to go from this state to the current one, then don't go back to it because that would make our
+                    // path loop on epsilon transitions forever
                     if (TRANSITIONS[i].getEND() == old_transitions[j].getSTART())
                         found = true;
                     j--;
                 }
+                // If we are not looping on the epsilon transition, we can check if the end state of the epsilon
+                // transition recognize the same word, if yes the word is recognized, so return true
                 if (!found && testWordByState(word, TRANSITIONS[i].getEND(), addTransition(old_transitions, TRANSITIONS[i])))
                     return true;
             }
         }
-        return false; // return false if none of the paths starting from this state recognize the word
+        // If none of the paths starting from this state recognize the word, then the state don't recognize the word,
+        // so return false
+        return false;
     }
 
     /**
@@ -1188,11 +1220,17 @@ public class Automaton {
      * @return true if the automaton recognize the word and false otherwise
      */
     public boolean testWord(String word) {
+        // Loop through all the states to find the initial ones and test if at least one of them recognize the word
         for (int i = 0; i < NB_STATES; i++) {
-            if (STATES[i].isINITIAL() && testWordByState(word, STATES[i], new Transition[0]))
-                return true;    // recognize the word if at least one of the initial states recognize it
+            // If the state is initial, test the recognition of the word by this state
+            if (STATES[i].isINITIAL() && testWordByState(word, STATES[i], new Transition[0])) {
+                // If at least one of the initial states recognize the word then it's recognized by the automaton,
+                // so return true
+                return true;
+            }
         }
-        return false;    // If none of the initial states recognize the word then it's not recognized by the automaton
+        // If none of the initial states recognize the word then it's not recognized by the automaton, so return false
+        return false;
     }
 
 
@@ -1202,97 +1240,130 @@ public class Automaton {
      * @return a string containing all the information about the automaton with the format of the text files
      */
     public String saveToString() {
-        int nb_initial = 0, nb_final = 0;
-        int start_tr, end_tr;
-        int i, j;
-        StringBuilder sb = new StringBuilder();
-        sb.append(NB_LETTER);
-        sb.append("\r\n");
-        sb.append(NB_STATES);
-        sb.append("\r\n");
-        for (State state: STATES) {
+        StringBuilder content = new StringBuilder();        // Store the information about the automaton
+        int nb_initial = 0, nb_final = 0;     // Respectively the numbers of initial and final states of the automaton
+        int start_tr, end_tr;       // Respectively the start and end state of the transition to add
+        int i, j;       // Counters for the loops
+
+        // The first line of the file is the number of letters in the alphabet of the automaton
+        content.append(NB_LETTER);
+        content.append("\r\n");
+
+        // The second line of the file is the number of states of the automaton
+        content.append(NB_STATES);
+        content.append("\r\n");
+
+        // The third line of the file is the number of initial states followed by the list of initial states
+        for (State state: STATES) {     // count the number of initial states
             if (state.isINITIAL())
                 nb_initial++;
         }
-        sb.append(nb_initial);
+        content.append(nb_initial);      // Add the number of initial states to the beginning of the line
+        // Loop through all the state to add the list of initial states
         for (i = 0; i < NB_STATES; i++) {
+            // if the state is initial, add the number of the state to the line
             if (STATES[i].isINITIAL()) {
-                sb.append(" ");
-                sb.append(i);
+                content.append(" ");     // Add a space to separate the newly added state from the rest of the line
+                content.append(i);
             }
         }
-        sb.append("\r\n");
-        for (State state: STATES) {
+        content.append("\r\n");          // Go to the next line
+
+        // The fourth line of the file is the number of final states followed by the list of final states
+        for (State state: STATES) {     // count the number of final states
             if (state.isFINAL())
                 nb_final++;
         }
-        sb.append(nb_final);
+        content.append(nb_final);      // Add the number of final states to the beginning of the line
+        // Loop through all the state to add the list of final states
         for (i = 0; i < NB_STATES; i++) {
+            // if the state is final, add the number of the state to the line
             if (STATES[i].isFINAL()) {
-                sb.append(" ");
-                sb.append(i);
+                content.append(" ");     // Add a space to separate the newly added state from the rest of the line
+                content.append(i);
             }
         }
-        sb.append("\r\n");
-        sb.append(NB_TRANSITIONS);
-        sb.append("\r\n");
+        content.append("\r\n");          // Go to the next line
+
+        // The fifth line of the file is the number of transitions of the automaton
+        content.append(NB_TRANSITIONS);
+        content.append("\r\n");
+
+        // The rest of the file (lines 6+) contains the list of all the transitions, with one transition on each line
+        // Loop through all the transitions of the automaton and add them one by one to the file
         for (i = 0; i < NB_TRANSITIONS; i++) {
-            start_tr = -1;
-            end_tr = -1;
+            start_tr = -1;  // Set by default the number of the start state of the transition at -1 (means not found)
+            end_tr = -1;    // Set by default the number of the end state of the transition at -1 (means not found)
             j = 0;
+            // Loop through all the states to find the numbers of the start and end states of the current transition
             while ((start_tr == -1 && end_tr == -1) || j < NB_STATES) {
                 if (STATES[j] == TRANSITIONS[i].getSTART())
-                    start_tr = j;
+                    start_tr = j;       // When the number of the start state is found, save it in 'start_tr'
                 if (STATES[j] == TRANSITIONS[i].getEND())
-                    end_tr = j;
+                    end_tr = j;       // When the number of the end state is found, save it in 'end_tr'
                 j++;
             }
-            sb.append(start_tr);
-            sb.append(TRANSITIONS[i].getLETTER());
-            sb.append(end_tr);
+            // Add the transition to 'content'
+            content.append(start_tr);       // Add first the number of the start state of the transition
+            content.append(TRANSITIONS[i].getLETTER());     // Add then the letter recognized by the transition
+            content.append(end_tr);     // Add finally the number of the end state of the transition
+            // Go to the next line (except for the last transition, because no new line at the end of file)
             if (i != NB_TRANSITIONS - 1)
-                sb.append("\r\n");
+                content.append("\r\n");
         }
-        return sb.toString();
+
+        // Return all the information contained in the variable 'content' as a string
+        return content.toString();
     }
 
     /**
      * Save the automaton in a text file at the location chosen by the user
      */
     public void saveInFile() {
-        JFileChooser fileChooser = new JFileChooser();
-        FileNameExtensionFilter filter;
-        File file, newFile;
-        FileWriter writer;
-        JPanel panel = new JPanel();
-        int save;
+        JFileChooser fileChooser = new JFileChooser();      // Allow opening a 'save file' window
+        FileNameExtensionFilter filter;                     // Store the extension filter for the 'save file window
+        File file;                                          // Will store the file that we will create
+        File temp_file;                                     // Store temporarily the new file when renaming it
+        FileWriter writer;                                  // Allow writing in to the created file
+        JPanel panel = new JPanel();                        // Support for the 'save file' window
+        int save;                                           // Store the result of the 'save file' window
 
-        fileChooser.setSelectedFile(new File("automaton.txt"));
+        // Set the default folder of the 'save file 'window
         fileChooser.setCurrentDirectory(new File("automata"));
+        fileChooser.setSelectedFile(new File("automaton.txt"));  // Set a default name for the file to save
+        // Create a filter that display only the text file with extension '.txt'
         filter = new FileNameExtensionFilter("Text file", "txt");
-        fileChooser.setFileFilter(filter);
+        // Add the filter to the list of filters that can be selected in our save file 'window'
         fileChooser.addChoosableFileFilter(filter);
+        fileChooser.setFileFilter(filter);        // Apply the filter to our 'save file' window by default
+        // Disable the possibility to display all type of files in the 'save file' window, so now the only available
+        // filter is the one who display only files with extension '.txt'
         fileChooser.setAcceptAllFileFilterUsed(false);
-        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);   // Allow only the selection of files, not folders
 
+        // Open the 'save file' window, and store the result in variable 'save'
         save = fileChooser.showSaveDialog(panel);
+        // If the user pressed save, create the file in the location chosen by the user
         if (save == JFileChooser.APPROVE_OPTION) {
-            file = fileChooser.getSelectedFile();
-            if (!file.toString().endsWith(".txt")) {
-                newFile = new File(file + ".txt");
-                file.delete();
-                file = newFile;
+            try {   // Secure this portion of the code to handle the errors that can happen during its execution
+                // Get the path (location + name) chosen by the user to save the file
+                file = fileChooser.getSelectedFile();
+                // If the file don't end with the extension '.txt', add it to the name of the file
+                if (!file.toString().endsWith(".txt")) {
+                    // Create a new file at the same location, with the same name and add the extension '.txt' at the end
+                    temp_file = new File(file + ".txt");
+                    Files.delete(file.toPath());      // Delete the old file that don't have the extension
+                    file = temp_file;       // Get the new file which have the extension
+                }
+                writer = new FileWriter(file);      // Create the object that can write in the file 'file'
+                writer.write(saveToString());       // Save the information about the automaton in the file
+                writer.close();            // Close the writer now that all the content have been saved in the file
             }
-            try {
-                writer = new FileWriter(file);
-                writer.write(saveToString());
-                writer.close();
-            }
-            catch (IOException exception) {
+            catch (IOException exception) {     // Display an error if the saving process fails
                 System.out.println("error");
             }
         }
-        if (save == JFileChooser.CANCEL_OPTION) {
+        if (save == JFileChooser.CANCEL_OPTION) {       // If the user pressed cancel, send a message to tell it
             System.out.println("you pressed cancel");
         }
     }
