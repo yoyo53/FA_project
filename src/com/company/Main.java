@@ -4,7 +4,8 @@ public class Main {
 
     public static void main(String[] args) {
         testAutomaton("automata/automaton_12.txt");
-        /*Automaton FA = new Automaton("automata/automaton_22.txt");
+        /*
+        Automaton FA = new Automaton("automata/automaton_22.txt");
 
         Automaton DFA = FA.determinize();
         Automaton CDFA = DFA.complete();
@@ -47,7 +48,8 @@ public class Main {
         if (MCDFA.testWord(word))
             System.out.println("The word '" + word + "' is recognized by the automaton.");
         else
-            System.out.println("The word '" + word + "' is not recognized by the automaton");*/
+            System.out.println("The word '" + word + "' is not recognized by the automaton");
+        */
     }
 
     static public void testAutomaton(String name){

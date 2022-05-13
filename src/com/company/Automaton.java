@@ -43,19 +43,24 @@ public class Automaton {
      * @param filepath The path of the text file containing the automaton
      * */
     public Automaton(String filepath) {
-        String[] file = getFileContent(filepath); // the file is a list of string where each element of the list is a line
-        if (file != null) {
-            NB_LETTER = Integer.parseInt(file[0]); //the first line gives the number of possible letters in the alphabet
+        // The variable file is a list of string where each element of the list is a line of the file
+        String[] file = getFileContent(filepath);
 
-            NB_STATES = Integer.parseInt(file[1]);  // The second (index 1) line of the file contains the number of states, so we take it to initialize MAX_NB_STATES
-            STATES = new State[NB_STATES];
-            setStates(file);
+        if (file != null) {     // Initialize the automaton from the file only if 'filepath' have been found
+            // The first line (index 0) of the file is the number of letters in the alphabet of the automaton
+            NB_LETTER = Integer.parseInt(file[0]);
 
-            NB_TRANSITIONS = Integer.parseInt(file[4]); // The fifth line (index 4) of the file contains the number of transitions, so we take it to initialize MAX_NB_TRANSITIONS
-            TRANSITIONS = new Transition[NB_TRANSITIONS];
-            setTransitions(file);
+            // The second line (index 1) of the file contains the number of states of the automaton (NB_STATES)
+            NB_STATES = Integer.parseInt(file[1]);
+            STATES = new State[NB_STATES];          // Create the list of states of the automaton
+            createStates(file);         // Initialize the list of states from the content of the file
+
+            // The fifth line (index 4) of the file contains the number of transitions of the automaton (NB_TRANSITIONS)
+            NB_TRANSITIONS = Integer.parseInt(file[4]);
+            TRANSITIONS = new Transition[NB_TRANSITIONS];   // Create the list of transitions of the automaton
+            createTransitions(file);    // Initialize the list of transitions from the content of the file
         }
-        else {
+        else {      // If 'file' is null (i.e. 'filepath' not found), create an empty automaton instead
             NB_LETTER = 0;
 
             NB_STATES = 0;
@@ -76,6 +81,7 @@ public class Automaton {
      * @param nb_transitions The number of transitions of the automaton
      * */
     public Automaton(int nb_letter, State[] states, int nb_states, Transition[] transitions, int nb_transitions) {
+        // Initialize all the attributes of the automaton to their values passed as argument
         NB_LETTER = nb_letter;
         STATES = states;
         NB_STATES = nb_states;
@@ -88,18 +94,22 @@ public class Automaton {
      *
      * @param filepath The path of the file
      *
-     * @return a string containing all the content of the file
+     * @return a string containing all the content of the file or null if an error occur during the file importation
      * */
     private String[] getFileContent(String filepath) {
-        try {
+        try {       // Secure this portion of the code to handle the errors that can happen during its execution
+            // If no error, return the content of the file as a list of string (each element is one line of the file)
             return Files.readString(Path.of(filepath)).split("\r\n");
         }
-        catch (IOException exception) {
+        catch (IOException exception) {     // Display an error and return value null if the file importation fail
             System.out.println("Error file not found");
             return null;
         }
     }
 
+    /**
+     * @return the list of states of the automaton
+     */
     public State[] getSTATES() {
         return STATES;
     }
@@ -109,25 +119,30 @@ public class Automaton {
      *
      * @param file The file containing the automaton as a list of string (each element of the list is one line)
      * */
-    private void setStates(String[] file) {
-        boolean is_initial, is_final;
-        String name;
+    private void createStates(String[] file) {
+        boolean is_initial, is_final;   // store respectively if the state that is going to be created is initial/final
+        String name;    // Store the name of the state that is going to be created
+        // The third line (index 2) of the file contains the list of initial states of the automaton
         String[] initials = file[2].split(" ");
+        // The third line (index 2) of the file contains the list of final states of the automaton
         String[] finals = file[3].split(" ");
 
         for (int i = 0; i < NB_STATES; i++) {
-            is_initial = false;
-            is_final = false;
-            name = String.valueOf(i);
+            is_initial = false;     // A state is by default considered as non-initial
+            is_final = false;       // A state is by default considered as non-final
+            name = String.valueOf(i);       // The name of the state is his number, from 0 to 'NB_STATES' - 1
 
+            // If we found our state in the list of initial states, the state is initial so 'is_initial' becomes true
             for (int j = 1; j < Integer.parseInt(initials[0]) + 1; j++)
-                if (name.equals(initials[j]))
+                if (name.equals(initials[j]))  // Compare if the name of our state is equal to any of the initial states
                     is_initial = true;
 
+            // If we found our state in the list of final states, the state is final so 'is_final' becomes true
             for (int j = 1; j < Integer.parseInt(finals[0]) + 1; j++)
-                if (name.equals(finals[j]))
+                if (name.equals(finals[j]))     // Compare if the name of our state is equal to any of the final states
                     is_final = true;
 
+            // We now have all the information about the state, we can create it and put it in the list
             STATES[i] = new State(name, is_initial, is_final);
         }
     }
@@ -140,10 +155,11 @@ public class Automaton {
      * @return the state that have the desired name
      * */
     private State getStateFromName(String name) {
+        // Search through all the states if one have the desired name
         for (State state: STATES)
-            if (name.equals(state.getNAME()))
-                return state;
-        return null;
+            if (name.equals(state.getNAME()))   // Compare the name of each state with the name we are searching
+                return state;       // If a state with the good name is found then return it
+        return null;        // If the desired state haven't been found (no state have this name) then return null value
     }
 
     /**
@@ -151,14 +167,25 @@ public class Automaton {
      *
      * @param file The file containing the automaton as a list of string (each element of the list is one line)
      * */
-    private void setTransitions(String[] file) {
-        State start, end;
-        char letter;
+    private void createTransitions(String[] file) {
+        String tr;          // Store the line of the file containing the description of the transition to create
+        String[] states_names;  // Store the names of the start and end states of the transition
+        State start, end; // Store respectively the start and end states of the transition
+        char letter;    // Store the letter recognized by the transition
+
         for (int i = 0; i < NB_TRANSITIONS; i++){
-            String[] tr = file[i + 5].split("[a-z*]");
-            start = getStateFromName(tr[0]);
-            letter = file[i+5].charAt(tr[0].length());
-            end = getStateFromName(tr[1]);
+            tr = file[i + 5];       // The transitions are stored starting from the line 6 of the file (index 5+)
+            // Split the string of the transition around the letter recognized, to have separately the name of the
+            // start state and the name of the end state
+            states_names = tr.split("[a-z*]");
+            // Find the already created state that correspond to the name of the start state of the transition
+            start = getStateFromName(states_names[0]);
+            // The character located directly after the name of the start state is the letter recognized
+            letter = tr.charAt(states_names[0].length());
+            // Find the already created state that correspond to the name of the end state of the transition
+            end = getStateFromName(states_names[1]);
+
+            // We now have all the information about the transition, we can create it and put it in the list
             TRANSITIONS[i] = new Transition(start, letter, end);
         }
     }
@@ -173,10 +200,12 @@ public class Automaton {
      * @return a new list of transitions containing all the elements of the old list and the new transition
      * */
     private Transition[] addTransition(Transition[] old_tr, Transition tr) {
+        // Create a new list that have the space to contain one more transition
         Transition[] new_tr = new Transition[old_tr.length + 1];
+        // Copy the content of the old list in the new one
         System.arraycopy(old_tr, 0, new_tr, 0, old_tr.length);
-        new_tr[old_tr.length] = tr;
-        return new_tr;
+        new_tr[old_tr.length] = tr;     // Add the new transition at the end of the new list
+        return new_tr;      // Return the new list of transitions with the added transition
     }
 
     /**
@@ -188,10 +217,12 @@ public class Automaton {
      * @return a new list of states containing all the elements of the old list and the new state
      * */
     private State[] addState(State[] old_states, State state) {
-        State[] new_st = new State[old_states.length + 1];
-        System.arraycopy(old_states, 0, new_st, 0, old_states.length);
-        new_st[old_states.length] = state;
-        return new_st;
+        // Create a new list that have the space to contain one more state
+        State[] new_states = new State[old_states.length + 1];
+        // Copy the content of the old list in the new one
+        System.arraycopy(old_states, 0, new_states, 0, old_states.length);
+        new_states[old_states.length] = state;      // Add the new state at the end of the new list
+        return new_states;      // Return the new list of states with the added state
     }
 
 
@@ -200,11 +231,15 @@ public class Automaton {
      *
      * @return true if the automaton is synchronous and false otherwise
      */
-    public boolean isSynchronous() {          // Allows us to check if a given automaton is synchronous or not
+    public boolean isSynchronous() {
+        // To find if an automaton is synchronous or not, we need to iterate through all its transition and check
+        // if there are epsilon transitions
         for(Transition tr: TRANSITIONS)
-            if (tr.getLETTER() == '*')
+            if (tr.getLETTER() == '*') {    // Check if the transition is an epsilon transition
+                // If at least one epsilon transition have been found, the automaton is asynchronous so return false
                 return false;
-        return true;
+            }
+        return true;    // If no epsilon transition have been found, the automaton is synchronous so return true
     }
 
     /**
@@ -216,27 +251,42 @@ public class Automaton {
      * @return a string containing all the states in the epsilon closure of this state
      */
     private String epsilonClosure(State state, String old_closure) {
+        // Store the epsilon closure of the state as the names of all states composing this closure separated
+        // by '.' (initialized with the existing input closure)
         StringBuilder closure = new StringBuilder(old_closure);
+        // Store the names of the states composing the epsilon closure as a list of strings (each element contain
+        // the name of one state)
         String[] state_names;
-        boolean found;
-        int i;
-        closure.append(state.getNAME());
+        boolean found;      // Allow to store the result of a condition that we will explain later
+        int i;      // Counter for the loop
+
+        // If there are already states in the closure, add a dot to separate the newly added state
+        if (closure.length() != 0)
+            closure.append(".");
+        closure.append(state.getNAME());    // Add the name of the current state to it's closure
+
         for (Transition tr: TRANSITIONS) {
+            // Search only the epsilon transitions starting from our current state
             if(tr.getLETTER() == '*' && tr.getSTART() == state){
+                // Get the list of names of the states that are already in the closure
                 state_names = closure.toString().split("\\.");
                 i = 0;
-                found = false;
+                found = false;      // We consider by default that the end state is not in the epsilon closure
                 while (!found && i < state_names.length) {
-                    if (tr.getEND().getNAME().equals(state_names[i]))
+                    // Search if the end state of the epsilon transition is already in the epsilon closure
+                    if (tr.getEND().getNAME().equals(state_names[i])) {
+                        // If the end state is already in the epsilon closure then set found at true to save the result
                         found = true;
+                    }
                     i++;
                 }
-                if (!found) {
-                    closure.append(".");
-                    closure.append(epsilonClosure(tr.getEND(), closure.toString()));
-                }
+                // If the end state of the transition is not in the epsilon closure (i.e. found is false),
+                // we add the epsilon closure of this state to our epsilon closure
+                if (!found)
+                    closure = new StringBuilder(epsilonClosure(tr.getEND(), closure.toString()));
             }
         }
+        // Once we checked all the transitions, we can finally convert our epsilon closure as a string and return it
         return closure.toString();
     }
 
@@ -245,7 +295,6 @@ public class Automaton {
      *
      * @return An equivalent new synchronous automaton
      */
-    // This is the synchronize function
     public Automaton synchronize() {
         Transition[] new_transitions = new Transition[0];       // Will contain the transitions of the new automaton
         State[] new_states = new State[0];                      // Will contain the states of the new automaton
