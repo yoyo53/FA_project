@@ -3,7 +3,7 @@ package com.company;
 public class Main {
 
     public static void main(String[] args) {
-        testAutomaton("automata/automaton_34.txt");
+        testAutomaton("automata/automaton_22.txt");
         /*
         Automaton FA = new Automaton("automata/automaton_34.txt");
 
@@ -64,6 +64,7 @@ public class Main {
         at.determinize().complete().printTable();
         System.out.println("___________");
         System.out.println("minimized");
+        System.out.println(at.determinize().complete().minimize());
         at.determinize().complete().minimize().printTable();
 
     }

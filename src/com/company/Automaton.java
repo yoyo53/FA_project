@@ -976,8 +976,8 @@ public class Automaton {
                                 groups_size[nb_groups] = 1;     // Store that now there is one state in this group
                                 nb_groups++;        // Store that now there is one more group
                             }
-                            for (k = j; k < groups_size[i]; k++)      // Delete the current state from its old group
-                                groups[i][j] = groups[i][j + 1];
+                            for (k = j; k < groups_size[i] - 1; k++)      // Delete the current state from its old group
+                                groups[i][k] = groups[i][k + 1];
                             groups_size[i]--;       // Store that now there is one less group
                         }
                     }
@@ -1188,8 +1188,8 @@ public class Automaton {
                                 groups_size[nb_groups] = 1;     // Store that now there is one state in this group
                                 nb_groups++;        // Store that now there is one more group
                             }
-                            for (k = j; k < groups_size[i]; k++)      // Delete the current state from its old group
-                                groups[i][j] = groups[i][j + 1];
+                            for (k = j; k < groups_size[i] - 1; k++)      // Delete the current state from its old group
+                                groups[i][k] = groups[i][k + 1];
                             groups_size[i]--;       // Store that now there is one less group
                         }
                     }
