@@ -1,0 +1,43 @@
+Automaton #37
+Original automaton:
+The automaton is synchronous.
+   | |a|b|
+<->|0|1|3|
+<--|1|2|4|
+<--|2|-|0|
+<--|3|1|0|
+<--|4|1|-|
+
+Determinized automaton:
+The automaton is already deterministic.
+   | |a|b|
+<->|0|1|3|
+<--|1|2|4|
+<--|2|-|0|
+<--|3|1|0|
+<--|4|1|-|
+
+Complete determinized automaton:
+   | |a|b|
+<->|0|1|3|
+<--|1|2|4|
+<--|2|5|0|
+<--|3|1|0|
+<--|4|1|5|
+   |5|5|5|
+
+Minimized complete determinized automaton:
+   | |a|b|
+<->|0|4|0|
+   |1|1|1|
+<--|2|1|0|
+<--|3|4|1|
+<--|4|2|3|
+
+Complement of the minimized complete determinized automaton:
+   | |a|b|
+-->|0|4|0|
+<--|1|1|1|
+   |2|1|0|
+   |3|4|1|
+   |4|2|3|

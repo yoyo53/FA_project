@@ -1,0 +1,43 @@
+Automaton #15
+Original automaton:
+The automaton is synchronous.
+   | |a|b|c|d|
+   |0|0|-|-|-|
+-->|1|1|2|3|4|
+   |2|0|2|3|4|
+   |3|0|0|3|4|
+<--|4|0|0|0|4|
+
+Determinized automaton:
+The automaton is already deterministic.
+   | |a|b|c|d|
+   |0|0|-|-|-|
+-->|1|1|2|3|4|
+   |2|0|2|3|4|
+   |3|0|0|3|4|
+<--|4|0|0|0|4|
+
+Complete determinized automaton:
+   | |a|b|c|d|
+   |0|0|5|5|5|
+-->|1|1|2|3|4|
+   |2|0|2|3|4|
+   |3|0|0|3|4|
+<--|4|0|0|0|4|
+   |5|5|5|5|5|
+
+Minimized complete determinized automaton:
+   | |a|b|c|d|
+   |0|0|0|0|0|
+<--|1|0|0|0|1|
+-->|2|2|3|4|1|
+   |3|0|3|4|1|
+   |4|0|0|4|1|
+
+Complement of the minimized complete determinized automaton:
+   | |a|b|c|d|
+<--|0|0|0|0|0|
+   |1|0|0|0|1|
+<->|2|2|3|4|1|
+<--|3|0|3|4|1|
+<--|4|0|0|4|1|

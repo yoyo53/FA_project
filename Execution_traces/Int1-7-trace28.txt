@@ -1,0 +1,51 @@
+Automaton #28
+Original automaton:
+The automaton is synchronous.
+   | |a|
+<--|0|4|
+-->|1|2, 4|
+   |2|3|
+<--|3|2|
+   |4|5|
+   |5|0|
+
+Determinized automaton:
+   | |a|
+-->|1|2.4|
+   |2.4|3.5|
+<--|3.5|0.2|
+<--|0.2|3.4|
+<--|3.4|2.5|
+   |2.5|0.3|
+<--|0.3|2.4|
+
+Complete determinized automaton:
+The automaton is already complete.
+   | |a|
+-->|1|2.4|
+   |2.4|3.5|
+<--|3.5|0.2|
+<--|0.2|3.4|
+<--|3.4|2.5|
+   |2.5|0.3|
+<--|0.3|2.4|
+
+Minimized complete determinized automaton:
+   | |a|
+-->|1|2.4|
+   |2.4|3.5|
+<--|3.5|0.2|
+<--|0.2|3.4|
+<--|3.4|2.5|
+   |2.5|0.3|
+<--|0.3|2.4|
+
+Complement of the minimized complete determinized automaton:
+   | |a|
+<->|1|2.4|
+<--|2.4|3.5|
+   |3.5|0.2|
+   |0.2|3.4|
+   |3.4|2.5|
+<--|2.5|0.3|
+   |0.3|2.4|

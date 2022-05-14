@@ -1,0 +1,25 @@
+Automaton #1
+Original automaton:
+The automaton is synchronous.
+   | |a|
+<->|0|-|
+
+Determinized automaton:
+The automaton is already deterministic.
+   | |a|
+<->|0|-|
+
+Complete determinized automaton:
+   | |a|
+<->|0|1|
+   |1|1|
+
+Minimized complete determinized automaton:
+   | |a|
+<->|0|1|
+   |1|1|
+
+Complement of the minimized complete determinized automaton:
+   | |a|
+-->|0|1|
+<--|1|1|

@@ -1,0 +1,34 @@
+Automaton #19
+Original automaton:
+The automaton is synchronous.
+   | |a|
+<--|0|0|
+-->|1|2|
+   |2|0|
+
+Determinized automaton:
+The automaton is already deterministic.
+   | |a|
+<--|0|0|
+-->|1|2|
+   |2|0|
+
+Complete determinized automaton:
+The automaton is already complete.
+   | |a|
+<--|0|0|
+-->|1|2|
+   |2|0|
+
+Minimized complete determinized automaton:
+The automaton is already minimal.
+   | |a|
+<--|0|0|
+-->|1|2|
+   |2|0|
+
+Complement of the minimized complete determinized automaton:
+   | |a|
+   |0|0|
+<->|1|2|
+<--|2|0|

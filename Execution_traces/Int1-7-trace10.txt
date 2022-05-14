@@ -1,0 +1,45 @@
+Automaton #10
+Original automaton:
+The automaton is synchronous.
+   | |a|b|
+<->|0|1|-|
+   |1|2|2|
+   |2|3|-|
+   |3|4|4|
+   |4|0|-|
+
+Determinized automaton:
+The automaton is already deterministic.
+   | |a|b|
+<->|0|1|-|
+   |1|2|2|
+   |2|3|-|
+   |3|4|4|
+   |4|0|-|
+
+Complete determinized automaton:
+   | |a|b|
+<->|0|1|5|
+   |1|2|2|
+   |2|3|5|
+   |3|4|4|
+   |4|0|5|
+   |5|5|5|
+
+Minimized complete determinized automaton:
+   | |a|b|
+<->|0|1|5|
+   |1|2|2|
+   |2|3|5|
+   |3|4|4|
+   |4|0|5|
+   |5|5|5|
+
+Complement of the minimized complete determinized automaton:
+   | |a|b|
+-->|0|1|5|
+<--|1|2|2|
+<--|2|3|5|
+<--|3|4|4|
+<--|4|0|5|
+<--|5|5|5|

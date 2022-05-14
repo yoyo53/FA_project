@@ -13,9 +13,19 @@ import java.nio.file.Path;
  * Object that represents an automaton
  */
 public class Automaton {
+    public int getNB_LETTER() {
+        return NB_LETTER;
+    }
+
+    public int getNB_STATES() {
+        return NB_STATES;
+    }
+
     /**
      * Number of letters composing the alphabet of the automaton
      * */
+
+
     private final int NB_LETTER;
 
     /**
@@ -734,7 +744,7 @@ public class Automaton {
             // Copy all the old states to the new list of states
             System.arraycopy(STATES, 0, new_states, 0, NB_STATES);
             // Create the trash state and add it at the end of the new list of states
-            new_states[NB_STATES] = new State("T", false, false);
+            new_states[NB_STATES] = new State(String.valueOf(NB_STATES), false, false);
 
             // already existing transition (not modified) + missing transition + transition from trash to trash
             new_transitions = new Transition[NB_TRANSITIONS + nb_missing + NB_LETTER];
@@ -1318,23 +1328,38 @@ public class Automaton {
 
 
     /**
-     * Create a table representing the transitions of the automaton
+     * Create the transition table of the automaton
      *
-     * @return the 2D list of strings that represents the transitions of the automaton
+     * @return a 2D list of strings representing the transitions of the automaton
      */
-    public String[][] toTable(){
-        String[][] table;       // The table of transitions of the automaton
+    public String[][] transitionTable(){
+        String[][] table;       // The transition table of the automaton
         // Save the name of the end states of the transition starting from a state and recognizing a specific letter
         StringBuilder transitions = new StringBuilder();
         int i, j; // Counters for the loops
 
-        if (isSynchronous())   // If the automaton is synchronous, we take one line per state and one column per letter
-            table = new String[NB_STATES][NB_LETTER];
+        // If the automaton is synchronous, we take one line per state and one column per letter plus one column for
+        // state name and one other to say if the state is initial and/or final
+        if (isSynchronous())
+            table = new String[NB_STATES][NB_LETTER + 2];
         else        // If the automaton is asynchronous we need one more column to add the epsilon transitions
-            table = new String[NB_STATES][NB_LETTER + 1];
+            table = new String[NB_STATES][NB_LETTER + 3];
 
         for (i = 0; i < NB_STATES; i++){    // Fill all the table state by state
-            for (j = 0; j < NB_LETTER; j++){    // Fill the line corresponding to the current state letter by letter
+            // Save in the first cell of the line is the state is initial and/or final (or nothing)
+            if (STATES[i].isINITIAL() && STATES[i].isFINAL())
+                table[i][0] = "<->";
+            else if (STATES[i].isINITIAL())
+                table[i][0] = "-->";
+            else if (STATES[i].isFINAL())
+                table[i][0] = "<--";
+            else
+                table[i][0] = "";
+
+            // Save the name of the state in the second cell of the line
+            table[i][1] = STATES[i].getNAME();
+
+            for (j = 0; j < NB_LETTER; j++){    // Fill the rest of the line with the transitions, letter by letter
                 transitions.setLength(0); // Clear the content of the StringBuilder to create a new cell of the table
                 // Loop through all the transitions to find the ones of the current state recognizing the current letter
                 for (Transition tr : TRANSITIONS){
@@ -1348,10 +1373,10 @@ public class Automaton {
                         transitions.append(tr.getEND().getNAME());
                     }
                 }
-                if (transitions.length() == 0)      // if no transition have been found then put null in the cell
-                    table[i][j] = null;
-                else                // Else enter the value of 'transitions' in the table
-                    table[i][j] = transitions.toString();
+                if (transitions.length() == 0)      // if no transition have been found then put '-' value in the cell
+                    table[i][j + 2] = "-";
+                else                // Else enter the value of 'transitions' in the transition table
+                    table[i][j + 2] = transitions.toString();
             }
         }
 
@@ -1370,50 +1395,92 @@ public class Automaton {
                         transitions.append(tr.getEND().getNAME());
                     }
                 }
-                if (transitions.length() == 0)      // if no transition have been found then put null in the cell
-                    table[i][NB_LETTER] = null;
-                else                // Else enter the value of 'transitions' in the table
+                if (transitions.length() == 0)      // if no transition have been found then put '-' value in the cell
+                    table[i][NB_LETTER] = "-";
+                else                // Else enter the value of 'transitions' in the transition table
                     table[i][NB_LETTER] = transitions.toString();
 
             }
 
 
-            // Return the table once all the cells have been filled with the transitions
+            // Return the transition table once all the cells have been filled with the transitions
         return table;
     }
 
+    // Display the transition table in the console (TO KEEP ONLY IF UI DON'T WORK)
     public void printTable() {
-        String[][] table = toTable();
-        int is_asynchronous = 0;
+        String[][] table = transitionTable();
+        int max_cell_size = 5;
 
-        System.out.print("     ");
+        System.out.print("|" + adjustToCell("", max_cell_size) + "|" + adjustToCell("", max_cell_size));
         for (int i = 0; i < NB_LETTER; i++)
-            System.out.print("|" + (char) (97 + i));
+            System.out.print("|" + adjustToCell(String.valueOf((char) (97 + i)), max_cell_size));
         if (!isSynchronous()) {
-            is_asynchronous = 1;
-            System.out.print("|*");
+            System.out.print("|" + adjustToCell("ε", max_cell_size));
         }
-        System.out.println();
+        System.out.println("|");
 
         for (int i = 0; i < NB_STATES; i++){
-            if (STATES[i].isINITIAL() && STATES[i].isFINAL())
-                System.out.print("<->");
-            else if (STATES[i].isINITIAL())
-                System.out.print("-->");
-            else if (STATES[i].isFINAL())
-                System.out.print("<--");
-            else
-                System.out.print("   ");
-            System.out.print("|" + STATES[i].getNAME());
-            for (int j = 0; j < NB_LETTER + is_asynchronous; j++)
-                if (table[i][j] == null)
-                    System.out.print("|-");
-                else
-                    System.out.print("|" + table[i][j]);
-            System.out.println();
+            for (int j = 0; j < table[0].length; j++)
+                System.out.print("|" + adjustToCell(table[i][j], max_cell_size));
+            System.out.println("|");
         }
     }
 
+    // Display the transition table in the console (TO KEEP ONLY IF UI DON'T WORK)
+    private String adjustToCell(String string, int size){
+        StringBuilder adaptedString = new StringBuilder();
+        adaptedString.append(string);
+
+        while (adaptedString.length() < size){
+            if( adaptedString.length() + 2 <= size)
+                adaptedString.insert(0, " ").append(" ");
+            else
+                adaptedString.append(" ");
+
+        }
+        return adaptedString.toString();
+    }
+
+    // To do the execution traces (DELETE BEFORE SUBMITTING)
+    public String asTable() {
+        StringBuilder sb = new StringBuilder();
+        String[][] table = transitionTable();
+        int is_asynchronous = 0;
+
+        sb.append("   | ");
+        for (int i = 0; i < NB_LETTER; i++) {
+            sb.append("|");
+            sb.append((char) (97 + i));
+        }
+        if (!isSynchronous()) {
+            is_asynchronous = 1;
+            sb.append("|ε");
+        }
+        sb.append("|\r\n");
+
+        for (int i = 0; i < NB_STATES; i++){
+            if (STATES[i].isINITIAL() && STATES[i].isFINAL())
+                sb.append("<->");
+            else if (STATES[i].isINITIAL())
+                sb.append("-->");
+            else if (STATES[i].isFINAL())
+                sb.append("<--");
+            else
+                sb.append("   ");
+            sb.append("|");
+            sb.append(STATES[i].getNAME());
+            for (int j = 0; j < NB_LETTER + is_asynchronous; j++)
+                if (table[i][j] == null)
+                    sb.append("|-");
+                else {
+                    sb.append("|");
+                    sb.append(table[i][j]);
+                }
+                sb.append("|\r\n");
+        }
+        return sb.toString();
+    }
 
     /**
      * Check recursively if there is at least one path starting from the current state that recognize the
@@ -1578,7 +1645,7 @@ public class Automaton {
         int save;                                           // Store the result of the 'save file' window
 
         // Set the default folder of the 'save file 'window
-        fileChooser.setCurrentDirectory(new File("automata"));
+        fileChooser.setCurrentDirectory(new File("Test_automata"));
         fileChooser.setSelectedFile(new File("automaton.txt"));  // Set a default name for the file to save
         // Create a filter that display only the text file with extension '.txt'
         filter = new FileNameExtensionFilter("Text file", "txt");

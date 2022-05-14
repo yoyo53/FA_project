@@ -1,0 +1,40 @@
+Automaton #34
+Original automaton:
+The automaton is synchronous.
+   | |a|b|ε|
+-->|0|-|-|1, 4|
+   |1|2|-|2|
+   |2|-|3|-|
+   |3|-|-|2, 6|
+   |4|-|5|-|
+   |5|-|-|4, 6|
+<--|6|-|-|-|
+
+Determinized automaton:
+   | |a|b|
+-->|0.1.2.4|2|2.3.4.5.6|
+   |2|-|2.3.6|
+<--|2.3.4.5.6|-|2.3.4.5.6|
+<--|2.3.6|-|2.3.6|
+
+Complete determinized automaton:
+   | |a|b|
+-->|0.1.2.4|2|2.3.4.5.6|
+   |2|4|2.3.6|
+<--|2.3.4.5.6|4|2.3.4.5.6|
+<--|2.3.6|4|2.3.6|
+   |4|4|4|
+
+Minimized complete determinized automaton:
+   | |a|b|
+-->|0|3|1|
+<--|1|2|1|
+   |2|2|2|
+   |3|2|1|
+
+Complement of the minimized complete determinized automaton:
+   | |a|b|
+<->|0|3|1|
+   |1|2|1|
+<--|2|2|2|
+<--|3|2|1|
