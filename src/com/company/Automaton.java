@@ -778,7 +778,7 @@ public class Automaton {
      */
     private State getTransition(State state, char letter) {
         // Loop through all the transitions of the automaton to search for the one that have the desired start state
-        // and the desired recognized letter
+        // and the desired recognized letter (assuming that the automaton is deterministic)
         for (Transition tr: TRANSITIONS) {
             // If the matching transition is found (good start state and recognized letter), then return its end state
             if (tr.getSTART() == state && tr.getLETTER() == letter)
@@ -1323,10 +1323,15 @@ public class Automaton {
      * @return the 2D list of strings that represents the transitions of the automaton
      */
     public String[][] toTable(){
-        String[][] table = new String[NB_STATES][NB_LETTER];        // The table of transitions of the automaton
+        String[][] table;       // The table of transitions of the automaton
         // Save the name of the end states of the transition starting from a state and recognizing a specific letter
         StringBuilder transitions = new StringBuilder();
         int i, j; // Counters for the loops
+
+        if (isSynchronous())   // If the automaton is synchronous, we take one line per state and one column per letter
+            table = new String[NB_STATES][NB_LETTER];
+        else        // If the automaton is asynchronous we need one more column to add the epsilon transitions
+            table = new String[NB_STATES][NB_LETTER + 1];
 
         for (i = 0; i < NB_STATES; i++){    // Fill all the table state by state
             for (j = 0; j < NB_LETTER; j++){    // Fill the line corresponding to the current state letter by letter
@@ -1350,16 +1355,44 @@ public class Automaton {
             }
         }
 
-        // Return the table once all the cells have been filled with the transitions
+        // If the automaton is asynchronous we have also to add the epsilon transitions
+        if (!isSynchronous())
+            for (i = 0; i < NB_STATES; i++) {
+                transitions.setLength(0); // Clear the content of the StringBuilder to create a new cell of the table
+                // Loop through all the transitions to find the epsilon transitions of the current state
+                for (Transition tr : TRANSITIONS){
+                    // If we find an epsilon transition matching, add the end state of this transition to 'transitions'
+                    if (tr.getLETTER() == '*' && tr.getSTART() == STATES[i]) {
+                        // If there are already states in 'transitions', put a separator before adding the new state
+                        if (transitions.length() > 0)
+                            transitions.append(", ");
+                        // Add the end state of the transition
+                        transitions.append(tr.getEND().getNAME());
+                    }
+                }
+                if (transitions.length() == 0)      // if no transition have been found then put null in the cell
+                    table[i][NB_LETTER] = null;
+                else                // Else enter the value of 'transitions' in the table
+                    table[i][NB_LETTER] = transitions.toString();
+
+            }
+
+
+            // Return the table once all the cells have been filled with the transitions
         return table;
     }
 
     public void printTable() {
         String[][] table = toTable();
+        int is_asynchronous = 0;
 
         System.out.print("     ");
         for (int i = 0; i < NB_LETTER; i++)
             System.out.print("|" + (char) (97 + i));
+        if (!isSynchronous()) {
+            is_asynchronous = 1;
+            System.out.print("|*");
+        }
         System.out.println();
 
         for (int i = 0; i < NB_STATES; i++){
@@ -1372,7 +1405,7 @@ public class Automaton {
             else
                 System.out.print("   ");
             System.out.print("|" + STATES[i].getNAME());
-            for (int j = 0; j < NB_LETTER; j++)
+            for (int j = 0; j < NB_LETTER + is_asynchronous; j++)
                 if (table[i][j] == null)
                     System.out.print("|-");
                 else
