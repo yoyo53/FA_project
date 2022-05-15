@@ -1,30 +1,30 @@
 Automaton #12
 Original automaton:
 The automaton is synchronous.
-   | |a|b|c|d|
-   |0|-|0|-|1|
-<->|1|1|-|0|-|
+|     |     |  a  |  b  |  c  |  d  |
+|     |  0  |  -  |  0  |  -  |  1  |
+| <-> |  1  |  1  |  -  |  0  |  -  |
 
 Determinized automaton:
 The automaton is already deterministic.
-   | |a|b|c|d|
-   |0|-|0|-|1|
-<->|1|1|-|0|-|
+|     |     |  a  |  b  |  c  |  d  |
+|     |  0  |  -  |  0  |  -  |  1  |
+| <-> |  1  |  1  |  -  |  0  |  -  |
 
 Complete determinized automaton:
-   | |a|b|c|d|
-   |0|2|0|2|1|
-<->|1|1|2|0|2|
-   |2|2|2|2|2|
+|     |     |  a  |  b  |  c  |  d  |
+|     |  0  |  2  |  0  |  2  |  1  |
+| <-> |  1  |  1  |  2  |  0  |  2  |
+|     |  2  |  2  |  2  |  2  |  2  |
 
 Minimized complete determinized automaton:
-   | |a|b|c|d|
-   |0|2|0|2|1|
-<->|1|1|2|0|2|
-   |2|2|2|2|2|
+|     |     |  a  |  b  |  c  |  d  |
+|     |  0  |  2  |  0  |  2  |  1  |
+| <-> |  1  |  1  |  2  |  0  |  2  |
+|     |  2  |  2  |  2  |  2  |  2  |
 
 Complement of the minimized complete determinized automaton:
-   | |a|b|c|d|
-<--|0|2|0|2|1|
--->|1|1|2|0|2|
-<--|2|2|2|2|2|
+|     |     |  a  |  b  |  c  |  d  |
+| <-- |  0  |  2  |  0  |  2  |  1  |
+| --> |  1  |  1  |  2  |  0  |  2  |
+| <-- |  2  |  2  |  2  |  2  |  2  |

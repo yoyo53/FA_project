@@ -17,15 +17,9 @@ public class Automaton {
         return NB_LETTER;
     }
 
-    public int getNB_STATES() {
-        return NB_STATES;
-    }
-
     /**
      * Number of letters composing the alphabet of the automaton
      * */
-
-
     private final int NB_LETTER;
 
     /**
@@ -1359,7 +1353,7 @@ public class Automaton {
             // Save the name of the state in the second cell of the line
             table[i][1] = STATES[i].getNAME();
 
-            for (j = 0; j < NB_LETTER; j++){    // Fill the rest of the line with the transitions, letter by letter
+            for (j = 0; j < NB_LETTER; j++){  // Fill the other cells of the line with the transitions, letter by letter
                 transitions.setLength(0); // Clear the content of the StringBuilder to create a new cell of the table
                 // Loop through all the transitions to find the ones of the current state recognizing the current letter
                 for (Transition tr : TRANSITIONS){
@@ -1446,38 +1440,28 @@ public class Automaton {
     public String asTable() {
         StringBuilder sb = new StringBuilder();
         String[][] table = transitionTable();
-        int is_asynchronous = 0;
+        int max_cell_size = 5;
 
-        sb.append("   | ");
+        sb.append("|");
+        sb.append(adjustToCell("", max_cell_size));
+        sb.append("|");
+        sb.append(adjustToCell("", max_cell_size));
         for (int i = 0; i < NB_LETTER; i++) {
             sb.append("|");
-            sb.append((char) (97 + i));
+            sb.append(adjustToCell(String.valueOf((char) (97 + i)), max_cell_size));
         }
         if (!isSynchronous()) {
-            is_asynchronous = 1;
-            sb.append("|ε");
+            sb.append("|");
+            sb.append(adjustToCell("ε", max_cell_size));
         }
         sb.append("|\r\n");
 
         for (int i = 0; i < NB_STATES; i++){
-            if (STATES[i].isINITIAL() && STATES[i].isFINAL())
-                sb.append("<->");
-            else if (STATES[i].isINITIAL())
-                sb.append("-->");
-            else if (STATES[i].isFINAL())
-                sb.append("<--");
-            else
-                sb.append("   ");
-            sb.append("|");
-            sb.append(STATES[i].getNAME());
-            for (int j = 0; j < NB_LETTER + is_asynchronous; j++)
-                if (table[i][j] == null)
-                    sb.append("|-");
-                else {
-                    sb.append("|");
-                    sb.append(table[i][j]);
-                }
-                sb.append("|\r\n");
+            for (int j = 0; j < table[0].length; j++) {
+                sb.append("|");
+                sb.append(adjustToCell(table[i][j], max_cell_size));
+            }
+            sb.append("|\r\n");
         }
         return sb.toString();
     }

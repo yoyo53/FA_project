@@ -1,33 +1,33 @@
 Automaton #6
 Original automaton:
 The automaton is synchronous.
-   | |a|b|
-<--|0|-|-|
--->|1|2|-|
-<--|2|-|-|
--->|3|-|0|
+|     |     |  a  |  b  |
+| <-- |  0  |  -  |  -  |
+| --> |  1  |  2  |  -  |
+| <-- |  2  |  -  |  -  |
+| --> |  3  |  -  |  0  |
 
 Determinized automaton:
-   | |a|b|
--->|1.3|2|0|
-<--|2|-|-|
-<--|0|-|-|
+|     |     |  a  |  b  |
+| --> | 1.3 |  2  |  0  |
+| <-- |  2  |  -  |  -  |
+| <-- |  0  |  -  |  -  |
 
 Complete determinized automaton:
-   | |a|b|
--->|1.3|2|0|
-<--|2|3|3|
-<--|0|3|3|
-   |3|3|3|
+|     |     |  a  |  b  |
+| --> | 1.3 |  2  |  0  |
+| <-- |  2  |  3  |  3  |
+| <-- |  0  |  3  |  3  |
+|     |  3  |  3  |  3  |
 
 Minimized complete determinized automaton:
-   | |a|b|
--->|0|1|1|
-<--|1|2|2|
-   |2|2|2|
+|     |     |  a  |  b  |
+| --> |  0  |  1  |  1  |
+| <-- |  1  |  2  |  2  |
+|     |  2  |  2  |  2  |
 
 Complement of the minimized complete determinized automaton:
-   | |a|b|
-<->|0|1|1|
-   |1|2|2|
-<--|2|2|2|
+|     |     |  a  |  b  |
+| <-> |  0  |  1  |  1  |
+|     |  1  |  2  |  2  |
+| <-- |  2  |  2  |  2  |

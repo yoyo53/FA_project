@@ -1,26 +1,26 @@
 Automaton #4
 Original automaton:
 The automaton is synchronous.
-   | |a|
--->|0|1|
-   |1|-|
+|     |     |  a  |
+| --> |  0  |  1  |
+|     |  1  |  -  |
 
 Determinized automaton:
 The automaton is already deterministic.
-   | |a|
--->|0|1|
-   |1|-|
+|     |     |  a  |
+| --> |  0  |  1  |
+|     |  1  |  -  |
 
 Complete determinized automaton:
-   | |a|
--->|0|1|
-   |1|2|
-   |2|2|
+|     |     |  a  |
+| --> |  0  |  1  |
+|     |  1  |  2  |
+|     |  2  |  2  |
 
 Minimized complete determinized automaton:
-   | |a|
--->|0|0|
+|     |     |  a  |
+| --> |  0  |  0  |
 
 Complement of the minimized complete determinized automaton:
-   | |a|
-<->|0|0|
+|     |     |  a  |
+| <-> |  0  |  0  |
