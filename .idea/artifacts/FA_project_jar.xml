@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="FA_project:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/FA_project_jar</output-path>
+    <root id="archive" name="FA_project.jar">
+      <element id="module-output" name="Int1-7-FA_project" />
+    </root>
+  </artifact>
+</component>

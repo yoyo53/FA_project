@@ -1,7 +1,6 @@
 package com.company;
 
-import javax.swing.JFileChooser;
-import javax.swing.JPanel;
+import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.File;
 import java.io.FileWriter;
@@ -106,7 +105,8 @@ public class Automaton {
             return Files.readString(Path.of(filepath)).split("\r\n");
         }
         catch (IOException exception) {     // Display an error and return value null if the file importation fail
-            System.out.println("Error file not found");
+            JFrame frame = new JFrame("Error");
+            JOptionPane.showConfirmDialog(frame, "File not found", "Error", JOptionPane.DEFAULT_OPTION);
             return null;
         }
     }
@@ -302,8 +302,10 @@ public class Automaton {
         String[] closure;         // Will contain the epsilon closures of the different states
         int i, j;             // Counters for the different loops
 
-        if (isSynchronous())        // If the original automaton is already synchronous then do nothing
-            System.out.println("This automaton is already synchronous");
+        if (isSynchronous()) {       // If the original automaton is already synchronous then do nothing
+            JFrame frame = new JFrame("Information");
+            JOptionPane.showConfirmDialog(frame, "This automaton is already synchronous, no need to synchronize it", "Information", JOptionPane.DEFAULT_OPTION);
+        }
         else{       // Else (if it's asynchronous), synchronize it
             // Loop through each state of the original to create their equivalent in the synchronized automaton
             for (State state: STATES) {
@@ -525,9 +527,10 @@ public class Automaton {
         String[] next_state_names;                         // Store the names of the states composing the next state
 
 
-        if (isDeterministic())      // Do nothing if the automaton is already deterministic
-            System.out.println("This automaton is already deterministic.");
-        else if (isSynchronous()) {  // Case where the automaton is synchronous (i.e. no epsilon transitions)
+        if (isDeterministic()) {     // Do nothing if the automaton is already deterministic
+            JFrame frame = new JFrame("Information");
+            JOptionPane.showConfirmDialog(frame, "This automaton is already deterministic, no need to determinize it", "Information", JOptionPane.DEFAULT_OPTION);
+        }        else if (isSynchronous()) {  // Case where the automaton is synchronous (i.e. no epsilon transitions)
 
             // Construct the composed initial state of the deterministic automaton
             term = false;       // Determine if the initial state is also final, by default it's not
@@ -710,8 +713,10 @@ public class Automaton {
         int i, j;       // Counters for the loops
 
 
-        if (isComplete()) // If the automaton is already complete, then do nothing
-            System.out.println("This automaton is already complete.");
+        if (isComplete()) { // If the automaton is already complete, then do nothing
+            JFrame frame = new JFrame("Information");
+            JOptionPane.showConfirmDialog(frame, "This automaton is already complete, no need to complete it", "Information", JOptionPane.DEFAULT_OPTION);
+        }
         else {      // Else complete it by creating the trash state, its transitions and the missing transitions
 
             // By default, we set all the letters for all words as not used
@@ -1023,12 +1028,18 @@ public class Automaton {
         int i, j, k, l, m;      // Counters for the loops
 
 
-        if (!isDeterministic())     // If the automaton is not deterministic then it can't be minimized, so do nothing
-            System.out.println("This automaton is not deterministic.");
-        else if (!isComplete())     // If the automaton is not complete then it can't be minimized, so do nothing
-            System.out.println("This automaton is not complete.");
-        else if (isMinimal())     // Do nothing if the automaton is already minimal
-            System.out.println("This automaton is already minimal.");
+        if (!isDeterministic()) {    // If the automaton is not deterministic then it can't be minimized, so do nothing
+            JFrame frame = new JFrame("Information");
+            JOptionPane.showConfirmDialog(frame, "This automaton is not deterministic, we can't minimize it", "Information", JOptionPane.DEFAULT_OPTION);
+        }
+        else if (!isComplete()) {    // If the automaton is not complete then it can't be minimized, so do nothing
+            JFrame frame = new JFrame("Information");
+            JOptionPane.showConfirmDialog(frame, "This automaton is not complete, we can't minimize it", "Information", JOptionPane.DEFAULT_OPTION);
+        }
+        else if (isMinimal()) {    // Do nothing if the automaton is already minimal
+            JFrame frame = new JFrame("Information");
+            JOptionPane.showConfirmDialog(frame, "This automaton is already minimal, no need to minimize it", "Information", JOptionPane.DEFAULT_OPTION);
+        }
         else {
             // initialise the variables
             nb_groups = 0;
@@ -1278,10 +1289,14 @@ public class Automaton {
         State start_tr, end_tr;         // Store respectively the start of end state of the transition to create
         int i, j;           // Counters for the loops
 
-        if (!isDeterministic())   // If the automaton is not deterministic the algorithm can't be applied, so do nothing
-            System.out.println("This automaton is not deterministic.");
-        else if (!isComplete())     // If the automaton is not complete the algorithm can't be applied, so do nothing
-            System.out.println("This automaton is not complete.");
+        if (!isDeterministic()) { // If the automaton is not deterministic the algorithm can't be applied, so do nothing
+            JFrame frame = new JFrame("Information");
+            JOptionPane.showConfirmDialog(frame, "This automaton is not deterministic, we can't make its complement", "Information", JOptionPane.DEFAULT_OPTION);
+        }
+        else if (!isComplete()) {     // If the automaton is not complete the algorithm can't be applied, so do nothing
+            JFrame frame = new JFrame("Information");
+            JOptionPane.showConfirmDialog(frame, "This automaton is not complete, we can't make its complement", "Information", JOptionPane.DEFAULT_OPTION);
+        }
         else {      // Else (if the automaton is complete deterministic), then make its complement and return it
 
             // Copy all the states of the original automaton by just inverting the final states: final states become
@@ -1362,7 +1377,7 @@ public class Automaton {
                     if (tr.getLETTER() == (char) (97 + j) && tr.getSTART() == STATES[i]) {
                         // If there are already states in 'transitions', put a separator before adding the new state
                         if (transitions.length() > 0)
-                            transitions.append(", ");
+                            transitions.append(",");
                         // Add the end state of the transition
                         transitions.append(tr.getEND().getNAME());
                     }
@@ -1384,86 +1399,21 @@ public class Automaton {
                     if (tr.getLETTER() == '*' && tr.getSTART() == STATES[i]) {
                         // If there are already states in 'transitions', put a separator before adding the new state
                         if (transitions.length() > 0)
-                            transitions.append(", ");
+                            transitions.append(",");
                         // Add the end state of the transition
                         transitions.append(tr.getEND().getNAME());
                     }
                 }
                 if (transitions.length() == 0)      // if no transition have been found then put '-' value in the cell
-                    table[i][NB_LETTER] = "-";
+                    table[i][NB_LETTER + 2] = "-";
                 else                // Else enter the value of 'transitions' in the transition table
-                    table[i][NB_LETTER] = transitions.toString();
+                    table[i][NB_LETTER + 2] = transitions.toString();
 
             }
 
 
             // Return the transition table once all the cells have been filled with the transitions
         return table;
-    }
-
-    // Display the transition table in the console (TO KEEP ONLY IF UI DON'T WORK)
-    public void printTable() {
-        String[][] table = transitionTable();
-        int max_cell_size = 5;
-
-        System.out.print("|" + adjustToCell("", max_cell_size) + "|" + adjustToCell("", max_cell_size));
-        for (int i = 0; i < NB_LETTER; i++)
-            System.out.print("|" + adjustToCell(String.valueOf((char) (97 + i)), max_cell_size));
-        if (!isSynchronous()) {
-            System.out.print("|" + adjustToCell("ε", max_cell_size));
-        }
-        System.out.println("|");
-
-        for (int i = 0; i < NB_STATES; i++){
-            for (int j = 0; j < table[0].length; j++)
-                System.out.print("|" + adjustToCell(table[i][j], max_cell_size));
-            System.out.println("|");
-        }
-    }
-
-    // Display the transition table in the console (TO KEEP ONLY IF UI DON'T WORK)
-    private String adjustToCell(String string, int size){
-        StringBuilder adaptedString = new StringBuilder();
-        adaptedString.append(string);
-
-        while (adaptedString.length() < size){
-            if( adaptedString.length() + 2 <= size)
-                adaptedString.insert(0, " ").append(" ");
-            else
-                adaptedString.append(" ");
-
-        }
-        return adaptedString.toString();
-    }
-
-    // To do the execution traces (DELETE BEFORE SUBMITTING)
-    public String asTable() {
-        StringBuilder sb = new StringBuilder();
-        String[][] table = transitionTable();
-        int max_cell_size = 5;
-
-        sb.append("|");
-        sb.append(adjustToCell("", max_cell_size));
-        sb.append("|");
-        sb.append(adjustToCell("", max_cell_size));
-        for (int i = 0; i < NB_LETTER; i++) {
-            sb.append("|");
-            sb.append(adjustToCell(String.valueOf((char) (97 + i)), max_cell_size));
-        }
-        if (!isSynchronous()) {
-            sb.append("|");
-            sb.append(adjustToCell("ε", max_cell_size));
-        }
-        sb.append("|\r\n");
-
-        for (int i = 0; i < NB_STATES; i++){
-            for (int j = 0; j < table[0].length; j++) {
-                sb.append("|");
-                sb.append(adjustToCell(table[i][j], max_cell_size));
-            }
-            sb.append("|\r\n");
-        }
-        return sb.toString();
     }
 
     /**
@@ -1616,57 +1566,6 @@ public class Automaton {
         return content.toString();
     }
 
-    /**
-     * Save the automaton in a text file at the location chosen by the user
-     */
-    public void saveInFile() {
-        JFileChooser fileChooser = new JFileChooser();      // Allow opening a 'save file' window
-        FileNameExtensionFilter filter;                     // Store the extension filter for the 'save file window
-        File file;                                          // Will store the file that we will create
-        File temp_file;                                     // Store temporarily the new file when renaming it
-        FileWriter writer;                                  // Allow writing in to the created file
-        JPanel panel = new JPanel();                        // Support for the 'save file' window
-        int save;                                           // Store the result of the 'save file' window
-
-        // Set the default folder of the 'save file 'window
-        fileChooser.setCurrentDirectory(new File("Test_automata"));
-        fileChooser.setSelectedFile(new File("automaton.txt"));  // Set a default name for the file to save
-        // Create a filter that display only the text file with extension '.txt'
-        filter = new FileNameExtensionFilter("Text file", "txt");
-        // Add the filter to the list of filters that can be selected in our save file 'window'
-        fileChooser.addChoosableFileFilter(filter);
-        fileChooser.setFileFilter(filter);        // Apply the filter to our 'save file' window by default
-        // Disable the possibility to display all type of files in the 'save file' window, so now the only available
-        // filter is the one who display only files with extension '.txt'
-        fileChooser.setAcceptAllFileFilterUsed(false);
-        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);   // Allow only the selection of files, not folders
-
-        // Open the 'save file' window, and store the result in variable 'save'
-        save = fileChooser.showSaveDialog(panel);
-        // If the user pressed save, create the file in the location chosen by the user
-        if (save == JFileChooser.APPROVE_OPTION) {
-            try {   // Secure this portion of the code to handle the errors that can happen during its execution
-                // Get the path (location + name) chosen by the user to save the file
-                file = fileChooser.getSelectedFile();
-                // If the file don't end with the extension '.txt', add it to the name of the file
-                if (!file.toString().endsWith(".txt")) {
-                    // Create a new file at the same location, with the same name and add the extension '.txt' at the end
-                    temp_file = new File(file + ".txt");
-                    Files.delete(file.toPath());      // Delete the old file that don't have the extension
-                    file = temp_file;       // Get the new file which have the extension
-                }
-                writer = new FileWriter(file);      // Create the object that can write in the file 'file'
-                writer.write(saveToString());       // Save the information about the automaton in the file
-                writer.close();            // Close the writer now that all the content have been saved in the file
-            }
-            catch (IOException exception) {     // Display an error if the saving process fails
-                System.out.println("error");
-            }
-        }
-        if (save == JFileChooser.CANCEL_OPTION) {       // If the user pressed cancel, send a message to tell it
-            System.out.println("you pressed cancel");
-        }
-    }
 
     /**
      * Returns a string representing the automaton.
