@@ -1430,12 +1430,12 @@ public class Automaton {
         boolean found;      // Check if we are not going in an epsilon transitions loop
         int i, j;       // Counters for the loops
 
-        if (word.isEmpty())   // Recognize the word if we reach its end and if the current state is final
-            return state.isFINAL();
+        if (word.isEmpty() && state.isFINAL())   // Recognize the word if we reach its end and if the current state is final
+            return true;
         for (i = 0; i < NB_TRANSITIONS; i++) {
             // If there are transitions starting from this state with the fist character of the word, check if at least
             // one of the end states of those transitions recognize the rest of the word, if yes the word is recognized
-            if (TRANSITIONS[i].getLETTER() == word.charAt(0) && TRANSITIONS[i].getSTART() == state)
+            if (!word.isEmpty() && TRANSITIONS[i].getLETTER() == word.charAt(0) && TRANSITIONS[i].getSTART() == state)
                 if (testWordByState(word.substring(1), TRANSITIONS[i].getEND(), addTransition(old_transitions, TRANSITIONS[i])))
                     return true;
             // If there are epsilon transitions starting from this state, check if at least one of the end states
